@@ -240,8 +240,8 @@ export default function CertificationDashboard({ country: propCountry }: Certifi
 
       const [ra, euo, euoFarm, euoQa] = await Promise.all([
         fetchList('ra_audits', { filter: countryFilter, sort: '-created' }),
-        fetchList('eu_organic_inspections', { filter: countryFilter, sort: '-created' }),
-        fetchList('eu_organic_farm_inspections', { sort: '-created' }),
+        fetchList('eu_organic_inspections', { filter: countryFilter, sort: '-created', expand: 'farmer' }),
+        fetchList('eu_organic_farm_inspections', { sort: '-created', expand: 'farmer,farm' }),
         fetchList('eu_organic_processing_qa', { sort: '-created', expand: 'inspection' }),
       ]);
 
@@ -252,15 +252,15 @@ export default function CertificationDashboard({ country: propCountry }: Certifi
           ...item,
           type: 'eu_organic_farm',
           audit_date: item.inspection_date || item.created,
-          audit_location: item.farm_name || item.farm_id,
+          audit_location: (item.expand as any)?.farm?.farm_name || item.farm_id,
           auditor_name: item.inspector_name || 'System'
         })),
         ...(euoQa?.items || []).map(item => ({
           ...item,
           type: 'eu_organic_qa',
           audit_date: (item.expand?.inspection as any)?.inspection_date || item.created,
-          audit_location: (item.expand?.inspection as any)?.farmer_name || 'Post-Harvest QA',
-          auditor_name: (item.expand?.inspection as any)?.inspector_name || 'System'
+          audit_location: (item.expand?.inspection as any)?.expand?.farmer?.full_name || 'Post-Harvest QA',
+          auditor_name: (item.expand?.inspection as any)?.expand?.inspector?.name || (item.expand?.inspection as any)?.inspector_name || 'System'
         })),
       ].sort((a: any, b: any) => new Date(b.created || 0).getTime() - new Date(a.created || 0).getTime());
 
@@ -509,7 +509,7 @@ export default function CertificationDashboard({ country: propCountry }: Certifi
             <div className="space-y-1">
               <div className="flex justify-between border-b border-gray-100 py-1">
                 <span className="text-sm text-gray-600">Location/Farmer:</span>
-                <span className="text-sm font-semibold">{audit.audit_location || audit.farmer_name || audit.inspection_id}</span>
+                <span className="text-sm font-semibold">{audit.audit_location || (audit.expand as any)?.farmer?.full_name || audit.inspection_id}</span>
               </div>
               <div className="flex justify-between border-b border-gray-100 py-1">
                 <span className="text-sm text-gray-600">Inspector:</span>
@@ -676,7 +676,7 @@ export default function CertificationDashboard({ country: propCountry }: Certifi
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-gray-50/50">
+                <TableHeader className="bg-primary-700 [&_th]:text-white">
                   <TableRow>
                     <TableHead className="py-2 text-xs">{t('common:type', 'Type')}</TableHead>
                     <TableHead className="py-2 text-xs">{t('common:date', 'Date')}</TableHead>
@@ -705,9 +705,9 @@ export default function CertificationDashboard({ country: propCountry }: Certifi
                       </TableCell>
                       <TableCell className="py-3">
                         <div className="text-sm font-medium text-gray-900 line-clamp-1">
-                          {audit.type === 'eu_organic_farm' ? `Farm: ${audit.farm_name || audit.farm_id}` :
-                            audit.type === 'eu_organic_qa' ? `QA: ${audit.farmer_name || (audit.expand?.inspection as any)?.farmer_name || 'Processing'}` :
-                              audit.audit_location || audit.farmer_name || audit.inspection_id}
+                          {audit.type === 'eu_organic_farm' ? `Farm: ${(audit.expand as any)?.farm?.farm_name || audit.farm_id}` :
+                            audit.type === 'eu_organic_qa' ? `QA: ${(audit.expand as any)?.farmer?.full_name || (audit.expand?.inspection as any)?.expand?.farmer?.full_name || 'Processing'}` :
+                              audit.audit_location || (audit.expand as any)?.farmer?.full_name || audit.inspection_id}
                         </div>
                       </TableCell>
                       <TableCell className="py-3 text-sm text-gray-500">

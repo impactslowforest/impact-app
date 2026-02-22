@@ -2,7 +2,7 @@ import PbCollectionTable, { type ColumnDef } from '@/components/shared/PbCollect
 
 const columns: ColumnDef[] = [
   { key: 'check_id', label: 'Check ID' },
-  { key: 'farm_id_text', label: 'Farm' },
+  { key: 'farm_name', label: 'Farm', field: 'slow_farm.name' },
   { key: 'check_date', label: 'Date', render: (v) => v ? String(v).split('T')[0] : '' },
   { key: 'doctor1', label: 'Doctor 1' },
   { key: 'doctor2', label: 'Doctor 2' },
@@ -19,6 +19,7 @@ export default function DcFarmHealthCheckList() {
       title="Farm Health Checks"
       collection="dc_farm_health_checks"
       columns={columns}
+      expand="slow_farm"
     />
   );
 }

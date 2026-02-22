@@ -71,9 +71,7 @@ onRecordCreate((e) => {
         if (!e.record.getString("village_code")) {
           e.record.set("village_code", farm.getString("village_code") || "");
         }
-        if (!e.record.getString("village_name")) {
-          e.record.set("village_name", farm.getString("village") || "");
-        }
+        // village_name removed (normalization) — use expand farm.village in frontend
         if (!e.record.getString("country")) {
           e.record.set("country", farm.getString("country") || "");
         }
@@ -97,16 +95,7 @@ onRecordCreate((e) => {
 
   e.record.set("inbound_code", inboundCode);
 
-  // Auto-fill farmer_name
-  if (!e.record.getString("farmer_name")) {
-    var farmerId = e.record.getString("farmer");
-    if (farmerId) {
-      try {
-        var farmerRec = e.app.findRecordById("farmers", farmerId);
-        e.record.set("farmer_name", farmerRec.getString("full_name") || "");
-      } catch (err) { /* skip */ }
-    }
-  }
+  // farmer_name removed (normalization) — use expand farmer.full_name in frontend
 
   console.log("[AutoID] inbound_requests (" + source + "): " + inboundCode);
   e.next();

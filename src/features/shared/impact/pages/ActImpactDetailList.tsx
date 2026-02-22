@@ -6,7 +6,7 @@ const columns: ColumnDef[] = [
   { key: 'entity', label: 'Entity' },
   { key: 'activity_id', label: 'Activity ID' },
   { key: 'activity_date', label: 'Activity Date', render: (v) => v ? String(v).split(' ')[0] : '' },
-  { key: 'activity_name', label: 'Activity Name' },
+  { key: 'activity_name', label: 'Activity', field: 'activity.activity_name' },
   { key: 'description', label: 'Description', searchable: false },
   { key: 'budget', label: 'Budget' },
   { key: 'budget_type', label: 'Budget Type' },
@@ -21,6 +21,7 @@ export default function ActImpactDetailList() {
       title="Activity Impact Details"
       collection="act_impact_details"
       columns={columns}
+      expand="activity"
       sort="-activity_date"
     />
   );

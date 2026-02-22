@@ -2,8 +2,10 @@ import PbCollectionTable, { type ColumnDef } from '@/components/shared/PbCollect
 
 const columns: ColumnDef[] = [
   { key: 'tree_id', label: 'Tree ID' },
-  { key: 'farmer_id_text', label: 'Farmer ID' },
-  { key: 'farm_id_text', label: 'Farm ID' },
+  { key: 'farmer_id_text', label: 'Farmer Code' },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name' },
+  { key: 'farm_id_text', label: 'Farm Code' },
+  { key: 'farm_name', label: 'Farm', field: 'farm.farm_name' },
   { key: 'station_id', label: 'Station ID' },
   { key: 'tree_number', label: 'Tree Number' },
   { key: 'ao1_clone_input', label: 'AO1 Clone Input' },
@@ -20,6 +22,7 @@ export default function RaTreeIndexList() {
       title="RA Tree Index"
       collection="ra_tree_index"
       columns={columns}
+      expand="farmer,farm"
     />
   );
 }

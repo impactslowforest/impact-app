@@ -135,11 +135,11 @@ export default function StaffManagement({ country }: StaffManagementProps) {
                     <Table>
                         <TableHeader>
                             <TableRow className="border-b border-gray-200 hover:bg-transparent">
-                                <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">{t('auth:name')}</TableHead>
-                                <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">{t('auth:role')}</TableHead>
-                                <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">{t('auth:department')}</TableHead>
-                                <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">{t('auth:designation')}</TableHead>
-                                <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">{t('auth:contact')}</TableHead>
+                                <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">{t('auth:name')}</TableHead>
+                                <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">{t('auth:role')}</TableHead>
+                                <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">{t('auth:department')}</TableHead>
+                                <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">{t('auth:designation')}</TableHead>
+                                <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">{t('auth:contact')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

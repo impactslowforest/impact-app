@@ -223,6 +223,7 @@ export default function EuOrganicInspectionForm({ country: initialCountry }: EuO
   );
   // General info
   const [farmerId, setFarmerId] = useState('');
+  const [farmerRecordId, setFarmerRecordId] = useState('');
   const [farmerName, setFarmerName] = useState('');
   const [inspectorName, setInspectorName] = useState('');
   const [inspectionDate, setInspectionDate] = useState(
@@ -347,9 +348,8 @@ export default function EuOrganicInspectionForm({ country: initialCountry }: EuO
         inspection_id: `INS-${Date.now()}`,
         country,
         farmer_id: farmerId.trim(),
-        farmer_name: farmerName.trim(),
+        farmer: farmerRecordId || undefined,
         inspector: user?.id,
-        inspector_name: inspectorName.trim(),
         inspection_date: inspectionDate,
         location: location || undefined,
         informant: cleanSelect(informant),
@@ -389,8 +389,8 @@ export default function EuOrganicInspectionForm({ country: initialCountry }: EuO
           inspection_farm_id: `FINSP-${Date.now()}-${i}`,
           inspection: inspectionRecord.id,
           farmer_id: farmerId.trim(),
+          farmer: farmerRecordId || undefined,
           farm_id: farm.farmId.trim() || `F${i + 1}`,
-          farm_name: farm.farmName || undefined,
           land_certificate: farm.landCertificate,
           inspection_date: inspectionDate,
           inspector: user?.id,
@@ -537,6 +537,7 @@ export default function EuOrganicInspectionForm({ country: initialCountry }: EuO
                     if (rec) {
                       setFarmerName(rec.full_name || rec.name);
                       setFarmerId(rec.farmer_code || rec.id);
+                      setFarmerRecordId(rec.id);
                     }
                   }).catch(err => {
                     console.error('Error auto-fetching farmer:', err);
@@ -577,6 +578,7 @@ export default function EuOrganicInspectionForm({ country: initialCountry }: EuO
                           const rec = records.items[0];
                           setFarmerName(rec.full_name || rec.name);
                           setFarmerId(rec.farmer_code || rec.id);
+                          setFarmerRecordId(rec.id);
                         } else {
                           toast.error("Farmer not found");
                         }

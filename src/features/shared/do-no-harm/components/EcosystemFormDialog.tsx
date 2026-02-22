@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useCreateEcosystemAssessment, useUpdateEcosystemAssessment, useFarmsList } from '../../farm-operations/hooks/useFarmOpsData';
@@ -20,6 +19,7 @@ export function EcosystemFormDialog({ country, open, onOpenChange, editingItem }
     const updateMutation = useUpdateEcosystemAssessment();
     const { data: farms } = useFarmsList(country);
     const isEditing = !!editingItem;
+    const isPending = createMutation.isPending || updateMutation.isPending;
 
     useEffect(() => { if (open && formRef.current) formRef.current.reset(); }, [open, editingItem]);
 
@@ -43,61 +43,113 @@ export function EcosystemFormDialog({ country, open, onOpenChange, editingItem }
         }
     };
 
+    const selectClasses = "flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none";
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>{isEditing ? 'Edit Ecosystem Assessment' : 'Add Ecosystem Assessment'}</DialogTitle>
+                    <DialogTitle>{isEditing ? t('edit_assessment', 'Edit Assessment') : t('add_assessment', 'Add Assessment')}</DialogTitle>
                 </DialogHeader>
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label>Farm *</Label>
-                            <select name="farm" required defaultValue={(editingItem?.farm as string) ?? ''} className="w-full rounded-lg border px-3 py-2 text-sm">
-                                <option value="">Select farm...</option>
-                                {farms?.map((f) => <option key={f.id} value={f.id}>{f.farm_name} ({f.farm_code})</option>)}
-                            </select>
+                    {/* General Info */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('general_info', 'General Info')}</h3>
                         </div>
-                        <div className="space-y-1.5">
-                            <Label>Assessment Date *</Label>
-                            <Input name="assessment_date" type="date" required defaultValue={(editingItem?.assessment_date as string)?.split('T')[0] ?? ''} className="rounded-lg" />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="space-y-1.5"><Label>Species Count</Label><Input name="species_count" type="number" min="0" defaultValue={(editingItem?.species_count as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Vegetation Cover %</Label><Input name="vegetation_cover_pct" type="number" min="0" max="100" defaultValue={(editingItem?.vegetation_cover_pct as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5">
-                            <Label>Biodiversity Rating</Label>
-                            <select name="biodiversity_rating" defaultValue={(editingItem?.biodiversity_rating as string) ?? 'good'} className="w-full rounded-lg border px-3 py-2 text-sm">
-                                <option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="space-y-1.5"><Label>Tree Species</Label><Input name="tree_species_list" defaultValue={(editingItem?.tree_species_list as string) ?? ''} placeholder="e.g. Avocado, Macadamia, Teak" className="rounded-lg" /></div>
-                    <div className="space-y-1.5"><Label>Wildlife Observed</Label><Input name="wildlife_observed" defaultValue={(editingItem?.wildlife_observed as string) ?? ''} className="rounded-lg" /></div>
-                    <div className="space-y-1.5"><Label>Buffer Zone Details</Label><Input name="buffer_zone_details" defaultValue={(editingItem?.buffer_zone_details as string) ?? ''} className="rounded-lg" /></div>
-                    <div className="space-y-1.5"><Label>Waste Management</Label><Input name="waste_management_notes" defaultValue={(editingItem?.waste_management_notes as string) ?? ''} className="rounded-lg" /></div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        {[
-                            { name: 'wild_beekeeping', label: '🐝 Wild Beekeeping' },
-                            { name: 'managed_beekeeping', label: '🍯 Managed Beekeeping' },
-                            { name: 'riparian_buffer_check', label: '💧 Riparian Buffer' },
-                            { name: 'fire_usage', label: '🔥 Fire Usage' },
-                        ].map(({ name, label }) => (
-                            <div key={name} className="flex items-center gap-2">
-                                <input type="checkbox" id={`eco_${name}`} name={name} defaultChecked={!!editingItem?.[name]} className="h-4 w-4 rounded border-gray-300" />
-                                <Label htmlFor={`eco_${name}`} className="cursor-pointer">{label}</Label>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('farm')} *</span>
+                                <select name="farm" required defaultValue={(editingItem?.farm as string) ?? ''} className={selectClasses}>
+                                    <option value="">{t('select_farm', 'Select farm...')}</option>
+                                    {farms?.map((f) => <option key={f.id} value={f.id}>{f.farm_name} ({f.farm_code})</option>)}
+                                </select>
                             </div>
-                        ))}
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('assessment_date', 'Date')} *</span>
+                                <Input name="assessment_date" type="date" required defaultValue={(editingItem?.assessment_date as string)?.split('T')[0] ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="space-y-1.5"><Label>Notes</Label><Input name="notes" defaultValue={(editingItem?.notes as string) ?? ''} className="rounded-lg" /></div>
+                    {/* Biodiversity */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Biodiversity</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Species Count</span>
+                                <Input name="species_count" type="number" min="0" defaultValue={(editingItem?.species_count as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Vegetation Cover %</span>
+                                <Input name="vegetation_cover_pct" type="number" min="0" max="100" defaultValue={(editingItem?.vegetation_cover_pct as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Biodiversity Rating</span>
+                                <select name="biodiversity_rating" defaultValue={(editingItem?.biodiversity_rating as string) ?? 'good'} className={selectClasses}>
+                                    <option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option>
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Tree Species</span>
+                                <Input name="tree_species_list" defaultValue={(editingItem?.tree_species_list as string) ?? ''} placeholder="e.g. Avocado, Macadamia, Teak" className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Wildlife Observed</span>
+                                <Input name="wildlife_observed" defaultValue={(editingItem?.wildlife_observed as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Buffer Zone Details</span>
+                                <Input name="buffer_zone_details" defaultValue={(editingItem?.buffer_zone_details as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Waste Management</span>
+                                <Input name="waste_management_notes" defaultValue={(editingItem?.waste_management_notes as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                        </div>
+                    </div>
 
-                    <Button type="submit" className="w-full btn-3d-primary text-white rounded-lg" disabled={createMutation.isPending || updateMutation.isPending}>
-                        {isEditing ? t('save_changes', 'Save Changes') : 'Add Assessment'}
+                    {/* Ecosystem Checks */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Ecosystem Checks</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            {[
+                                { name: 'wild_beekeeping', label: 'Wild Beekeeping' },
+                                { name: 'managed_beekeeping', label: 'Managed Beekeeping' },
+                                { name: 'riparian_buffer_check', label: 'Riparian Buffer' },
+                                { name: 'fire_usage', label: 'Fire Usage' },
+                            ].map(({ name, label }, idx) => (
+                                <div key={name} className={`flex items-center gap-4 px-4 py-3 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                                    <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{label}</span>
+                                    <div className="flex-1 flex items-center gap-2">
+                                        <input type="checkbox" id={`eco_${name}`} name={name} defaultChecked={!!editingItem?.[name]} className="h-4 w-4 rounded border-gray-300 accent-primary-600" />
+                                        <label htmlFor={`eco_${name}`} className="text-sm text-gray-600 cursor-pointer">Yes</label>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Notes */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('notes')}</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('notes')}</span>
+                                <Input name="notes" defaultValue={(editingItem?.notes as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Submit */}
+                    <Button type="submit" className="w-full btn-3d-primary text-white rounded-lg" disabled={isPending}>
+                        {isEditing ? t('save_changes', 'Save Changes') : t('add_assessment', 'Add Assessment')}
                     </Button>
                 </form>
             </DialogContent>

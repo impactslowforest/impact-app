@@ -48,11 +48,22 @@ const LABEL_MAP: Record<string, { key: string; fallback: string }> = {
 export default function ModulesHub() {
   const { t } = useTranslation('nav');
   const shortcuts = useUIStore((s) => s.shortcuts);
+  const countryShortcuts = useUIStore((s) => s.countryShortcuts);
+  const activeCountry = useUIStore((s) => s.activeCountry);
   const { user } = useAuth();
-  const excluded = EXCLUDED_BY_COUNTRY[user?.country || ''] || [];
+
+  // Use per-country shortcuts (same logic as sidebar)
+  const effectiveKey = user?.country === 'global'
+    ? (activeCountry !== 'all' ? activeCountry : 'all')
+    : (user?.country || 'all');
+  const effectiveShortcuts = countryShortcuts[effectiveKey] || shortcuts;
+
+  // Country exclusions also respect activeCountry for global users
+  const uc = (user?.country === 'global' && activeCountry !== 'all') ? activeCountry : user?.country;
+  const excluded = EXCLUDED_BY_COUNTRY[uc || ''] || [];
 
   const cards = ALL_CARDS
-    .filter((c) => shortcuts.includes(c.key) && !excluded.includes(c.key))
+    .filter((c) => effectiveShortcuts.includes(c.key) && !excluded.includes(c.key))
     .map((c) => {
       const lbl = LABEL_MAP[c.key];
       return { ...c, label: t(lbl?.key ?? c.key, lbl?.fallback ?? c.key) };

@@ -2,9 +2,8 @@ import PbCollectionTable, { type ColumnDef } from '@/components/shared/PbCollect
 
 const columns: ColumnDef[] = [
   { key: 'check_record_id', label: 'Record ID' },
-  { key: 'kid_id_text', label: 'Kid' },
-  { key: 'kid_name', label: 'Name' },
-  { key: 'farm_id_text', label: 'Farm' },
+  { key: 'kid_name', label: 'Kid', field: 'kid.first_name' },
+  { key: 'farm_name', label: 'Farm', field: 'slow_farm.name' },
   { key: 'measure_date', label: 'Date', render: (v) => v ? String(v).split('T')[0] : '' },
   { key: 'weight_kg', label: 'Weight kg' },
   { key: 'height_cm', label: 'Height cm' },
@@ -22,6 +21,7 @@ export default function DcHealthCheckList() {
       title="Health Checks"
       collection="dc_health_checks"
       columns={columns}
+      expand="kid,slow_farm"
     />
   );
 }

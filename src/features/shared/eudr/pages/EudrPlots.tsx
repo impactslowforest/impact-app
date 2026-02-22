@@ -115,7 +115,7 @@ export function EudrPlots({ country }: EudrPlotsProps) {
   const buildFilter = () => {
     const parts: string[] = [];
     if (country) parts.push(`country = "${country}"`);
-    if (search) parts.push(`(plot_code ~ "${search}" || plot_name ~ "${search}" || farmer_name ~ "${search}")`);
+    if (search) parts.push(`(plot_code ~ "${search}" || plot_name ~ "${search}" || farmer.full_name ~ "${search}")`);
     if (statusFilter && statusFilter !== 'all') parts.push(`status = "${statusFilter}"`);
     return parts.length > 0 ? parts.join(' && ') : undefined;
   };
@@ -125,6 +125,7 @@ export function EudrPlots({ country }: EudrPlotsProps) {
     queryFn: () => pb.collection('eudr_plots').getList(page, 50, {
       filter: buildFilter(),
       sort: '-created',
+      expand: 'farmer',
     }),
     refetchOnMount: 'always',
     staleTime: 0,
@@ -275,10 +276,6 @@ export function EudrPlots({ country }: EudrPlotsProps) {
                       </div>
                     )}
                     <div className="space-y-1.5">
-                      <Label>{t('farmer_name')}</Label>
-                      <Input name="farmer_name" className="rounded-lg" />
-                    </div>
-                    <div className="space-y-1.5">
                       <Label>{t('farmer_id')}</Label>
                       <Input name="farmer_id" className="rounded-lg" />
                     </div>
@@ -401,8 +398,8 @@ export function EudrPlots({ country }: EudrPlotsProps) {
                               <div className="text-sm min-w-[180px]">
                                 <div className="font-bold text-primary-800">{plot.plot_code}</div>
                                 <div className="text-gray-700 mt-0.5">{plot.plot_name}</div>
-                                {plot.farmer_name && (
-                                  <div className="text-xs text-gray-500 mt-0.5">Farmer: {plot.farmer_name}</div>
+                                {(plot.expand as any)?.farmer?.full_name && (
+                                  <div className="text-xs text-gray-500 mt-0.5">Farmer: {(plot.expand as any).farmer.full_name}</div>
                                 )}
                                 <div className="flex items-center gap-2 mt-1.5">
                                   <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[plot.status] || ''}`}>
@@ -465,7 +462,7 @@ export function EudrPlots({ country }: EudrPlotsProps) {
                             </div>
                             <p className="text-sm mt-0.5 truncate text-gray-700">{plot.plot_name}</p>
                             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-xs text-muted-foreground">
-                              {plot.farmer_name && <span>Farmer: {plot.farmer_name}</span>}
+                              {(plot.expand as any)?.farmer?.full_name && <span>Farmer: {(plot.expand as any).farmer.full_name}</span>}
                               {plot.area_hectares > 0 && <span>{plot.area_hectares} ha</span>}
                               {plot.province && <span>{plot.province}</span>}
                               {plot.latitude && plot.longitude && (

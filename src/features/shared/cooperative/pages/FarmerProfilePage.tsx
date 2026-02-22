@@ -215,7 +215,7 @@ export default function FarmerProfilePage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-gray-50">
+            <TableHeader className="bg-primary-700 [&_th]:text-white">
               <TableRow>
                 <TableHead className="text-xs">{t('common:code', 'Code')}</TableHead>
                 <TableHead className="text-xs">{t('common:name', 'Name')}</TableHead>
@@ -268,7 +268,7 @@ export default function FarmerProfilePage() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-gray-50">
+            <TableHeader className="bg-primary-700 [&_th]:text-white">
               <TableRow>
                 <TableHead className="text-xs">{t('common:date', 'Date')}</TableHead>
                 <TableHead className="text-xs">{t('common:crop', 'Crop')}</TableHead>

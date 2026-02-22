@@ -1,13 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Globe, MapPin, Users, Sprout, TreePine, ArrowRight } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, LayersControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, LayersControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { toast } from 'sonner';
 import pb from '@/config/pocketbase';
 import { ROUTES } from '@/config/routes';
+import { useUIStore } from '@/stores/ui-store';
+
+const FarmPolygonLayer = lazy(() => import('@/components/shared/FarmPolygonLayer'));
 
 // Fix leaflet default marker icon issue
 delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
@@ -51,11 +55,56 @@ const COUNTRY_CODE_MAP: Record<string, string> = {
   indonesia: 'ID',
 };
 
+/* ─── Country bounds for auto-zoom ─── */
+
+const COUNTRY_BOUNDS: Record<string, L.LatLngBoundsExpression> = {
+  laos: [[13.9, 100.1], [22.5, 107.7]],
+  vietnam: [[8.5, 102.1], [23.4, 109.5]],
+  indonesia: [[-11, 95], [6, 141]],
+};
+
+/** Watches activeCountry and flies map to the country bounds */
+function MapAutoZoom({ activeCountry }: { activeCountry: string }) {
+  const map = useMap();
+  useEffect(() => {
+    if (activeCountry === 'all') {
+      map.flyTo([15, 60], 3, { duration: 1.2 });
+    } else {
+      const bounds = COUNTRY_BOUNDS[activeCountry];
+      if (bounds) {
+        map.flyToBounds(bounds, { padding: [30, 30], duration: 1.2 });
+      }
+    }
+  }, [activeCountry, map]);
+  return null;
+}
+
+/** Handles click events on farm polygon navigation buttons */
+function MapClickHandler({ onNavigate }: { onNavigate: (type: 'farmer' | 'farm', code: string) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const btn = target.closest('[data-farmer-code], [data-farm-code]') as HTMLElement | null;
+      if (!btn) return;
+      const farmerCode = btn.dataset.farmerCode;
+      const farmCode = btn.dataset.farmCode;
+      if (farmerCode) onNavigate('farmer', farmerCode);
+      else if (farmCode) onNavigate('farm', farmCode);
+    };
+    container.addEventListener('click', handleClick);
+    return () => container.removeEventListener('click', handleClick);
+  }, [map, onNavigate]);
+  return null;
+}
+
 /* ─── Component ─── */
 
 export default function GlobalMapPage() {
   const { t } = useTranslation(['common', 'nav']);
   const navigate = useNavigate();
+  const activeCountry = useUIStore((s) => s.activeCountry);
 
   // Custom Slow Forest logo marker
   const logoIcon = useMemo(() => new L.Icon({
@@ -74,6 +123,34 @@ export default function GlobalMapPage() {
     popupAnchor: [0, -28],
     className: 'slow-logo partner-marker',
   }), []);
+
+  // Handle polygon navigation clicks (farmer/farm buttons)
+  const handleMapNavigate = useCallback(async (type: 'farmer' | 'farm', code: string) => {
+    try {
+      if (type === 'farmer') {
+        const resp = await pb.collection('farmers').getList(1, 1, { filter: `farmer_code="${code}"` });
+        if (resp.items[0]) {
+          navigate(`/farmer/${resp.items[0].id}`);
+        } else {
+          toast.error(`Farmer ${code} not found`);
+        }
+      } else {
+        const resp = await pb.collection('farms').getList(1, 1, { filter: `farm_code="${code}"`, fields: 'id,farmer' });
+        if (resp.items[0]) {
+          const farm = resp.items[0];
+          if (farm.farmer) {
+            navigate(`/farmer/${farm.farmer}`);
+          } else {
+            navigate(`${ROUTES.FARM_FORM}?id=${farm.id}`);
+          }
+        } else {
+          toast.error(`Farm ${code} not found`);
+        }
+      }
+    } catch {
+      toast.error('Navigation error');
+    }
+  }, [navigate]);
 
   // Fetch live stats for operational countries
   const { data: countryStats } = useQuery({
@@ -123,6 +200,10 @@ export default function GlobalMapPage() {
             <span className="w-3 h-3 rounded-full bg-blue-400 border-2 border-white shadow" />
             {t('common:partner_network', 'Partner / Network')}
           </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded border border-[#B74C3A]" />
+            Farm Polygons
+          </span>
         </div>
       </div>
 
@@ -148,9 +229,19 @@ export default function GlobalMapPage() {
                 maxZoom={18}
               />
             </LayersControl.BaseLayer>
+            <LayersControl.Overlay checked name="Farm Polygons">
+              <Suspense fallback={null}>
+                <FarmPolygonLayer country={activeCountry} />
+              </Suspense>
+            </LayersControl.Overlay>
           </LayersControl>
 
-          {LOCATIONS.map((loc) => (
+          <MapAutoZoom activeCountry={activeCountry} />
+          <MapClickHandler onNavigate={handleMapNavigate} />
+
+          {LOCATIONS
+            .filter((loc) => activeCountry === 'all' || loc.countryCode === activeCountry)
+            .map((loc) => (
             <Marker
               key={loc.id}
               position={[loc.lat, loc.lng]}

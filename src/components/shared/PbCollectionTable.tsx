@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { toPng } from 'html-to-image';
 import {
   ArrowLeft, Search, Loader2, FileText, ChevronLeft, ChevronRight,
-  Plus, Pencil, Trash2, Eye, Lock,
+  Plus, Pencil, Trash2, Eye, Lock, Image, FileSpreadsheet,
 } from 'lucide-react';
 import pb from '@/config/pocketbase';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog';
 import DataExportBar from '@/components/shared/DataExportBar';
+import { useExport } from '@/hooks/useExport';
 import { toast } from 'sonner';
 
 export interface ColumnDef {
@@ -118,6 +120,8 @@ export default function PbCollectionTable({
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [detailRecord, setDetailRecord] = useState<Record<string, unknown> | null>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
+  const { exportData: exportToFile } = useExport();
 
   // Permission flags
   const showEditBtn = editable && canEdit !== false;
@@ -140,7 +144,10 @@ export default function PbCollectionTable({
     if (baseFilter) parts.push(baseFilter);
     if (search && searchableFields.length > 0) {
       const searchTerms = searchableFields
-        .filter(f => !f.includes('.') && !['latitude', 'longitude', 'created', 'updated'].includes(f))
+        .filter(f => {
+          const leaf = f.split('.').pop()!;
+          return !['latitude', 'longitude', 'created', 'updated'].includes(leaf);
+        })
         .map(f => `${f} ~ "${search}"`)
         .join(' || ');
       if (searchTerms) parts.push(`(${searchTerms})`);
@@ -190,12 +197,24 @@ export default function PbCollectionTable({
   const getValue = (record: Record<string, unknown>, key: string): unknown => {
     if (key.includes('.')) {
       const parts = key.split('.');
+      // Try direct path first (e.g. record.farmer.full_name)
       let val: unknown = record;
       for (const p of parts) {
         if (val && typeof val === 'object') val = (val as Record<string, unknown>)[p];
-        else return '';
+        else { val = undefined; break; }
       }
-      return val;
+      if (val !== undefined && val !== null) return val;
+      // Try via record.expand (PocketBase stores expanded relations here)
+      const expandObj = (record as Record<string, unknown>).expand;
+      if (expandObj && typeof expandObj === 'object') {
+        val = expandObj;
+        for (const p of parts) {
+          if (val && typeof val === 'object') val = (val as Record<string, unknown>)[p];
+          else return '';
+        }
+        return val;
+      }
+      return '';
     }
     return record[key];
   };
@@ -288,6 +307,36 @@ export default function PbCollectionTable({
     return row;
   });
 
+  // Detail popup export handlers
+  const handleExportImage = async () => {
+    if (!detailRef.current) return;
+    try {
+      const dataUrl = await toPng(detailRef.current, { backgroundColor: '#F9F5EF' });
+      const link = document.createElement('a');
+      link.download = `${collection}-${detailRecord?.id || 'record'}.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success(t('export_success', 'Exported successfully'));
+    } catch {
+      toast.error(t('export_error', 'Export failed'));
+    }
+  };
+
+  const handleDetailExport = (format: 'csv' | 'xlsx') => {
+    if (!detailRecord) return;
+    const row: Record<string, unknown> = {};
+    for (const col of columns) {
+      const field = col.field || col.key;
+      row[col.key] = getValue(detailRecord, field);
+    }
+    exportToFile(
+      [row],
+      columns.map(c => ({ key: c.key, label: c.label })),
+      { filename: `${collection}-${detailRecord.id as string}`, sheetName: title },
+      format
+    );
+  };
+
   const colCount = visibleColumns.length + (showActions ? 1 : 0);
 
   return (
@@ -308,7 +357,7 @@ export default function PbCollectionTable({
         </div>
         <div className="flex items-center gap-2">
           {showAddNew && (
-            <Button onClick={onCreateClick || openCreateForm} className="gap-2 bg-primary-700 hover:bg-primary-800 text-white">
+            <Button onClick={onCreateClick || openCreateForm} className="gap-2 bg-primary-700 hover:bg-primary-800 text-white shadow-lg shadow-primary-700/20">
               <Plus className="h-4 w-4" />
               {t('add_new', 'Add new')}
             </Button>
@@ -324,7 +373,7 @@ export default function PbCollectionTable({
       </div>
 
       {/* Search + Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm space-y-2">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/60 p-4 shadow-sm space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 min-w-[200px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -398,21 +447,21 @@ export default function PbCollectionTable({
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200/60 shadow-sm overflow-hidden">
         <div className="overflow-auto max-h-[65vh]">
           <Table>
             <TableHeader className="sticky top-0 z-10">
-              <TableRow className="border-b border-primary-800 hover:bg-transparent">
+              <TableRow className="border-b border-gray-200/60 hover:bg-transparent">
                 {visibleColumns.map(col => (
                   <TableHead
                     key={col.key}
-                    className={`font-semibold text-white text-[12px] uppercase tracking-wider whitespace-nowrap bg-primary-700 px-4 py-2.5 ${col.width || ''}`}
+                    className={`font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-6 py-4 ${col.width || ''}`}
                   >
                     {col.label}
                   </TableHead>
                 ))}
                 {showActions && (
-                  <TableHead className="font-semibold text-white text-[12px] uppercase tracking-wider whitespace-nowrap bg-primary-700 px-4 py-2.5 w-[100px]">
+                  <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-6 py-4 w-[100px]">
                     {t('actions', 'Actions')}
                   </TableHead>
                 )}
@@ -441,20 +490,20 @@ export default function PbCollectionTable({
                 records.map((record: Record<string, unknown>) => (
                   <TableRow
                     key={record.id as string}
-                    className="border-b border-gray-100 hover:bg-gray-50/50 cursor-pointer"
+                    className="border-b border-gray-100 hover:bg-gray-50/50 cursor-pointer transition-colors"
                     onClick={() => onRowClick ? onRowClick(record.id as string, record as Record<string, unknown>) : setDetailRecord(record)}
                   >
                     {visibleColumns.map(col => {
                       const field = col.field || col.key;
                       const val = getValue(record, field);
                       return (
-                        <TableCell key={col.key} className="text-[13px] text-gray-700 whitespace-nowrap max-w-[250px] truncate px-4 py-3">
+                        <TableCell key={col.key} className="text-sm text-gray-700 whitespace-nowrap max-w-[250px] truncate px-6 py-3.5">
                           {col.render ? col.render(val, record) : String(val ?? '')}
                         </TableCell>
                       );
                     })}
                     {showActions && (
-                      <TableCell className="px-4 py-2" onClick={e => e.stopPropagation()}>
+                      <TableCell className="px-6 py-2" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
                           {showEditBtn && (
                             <button
@@ -488,14 +537,17 @@ export default function PbCollectionTable({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+          <div className="flex items-center justify-between px-6 py-3.5 border-t border-gray-100 bg-gray-50/30">
             <span className="text-xs text-gray-500">
               {t('page', 'Page')} {page} / {totalPages} ({totalItems} {t('total', 'total')})
             </span>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
+              <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-primary-700 text-white text-xs font-bold px-2">
+                {page}
+              </span>
               <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -557,50 +609,55 @@ export default function PbCollectionTable({
               );
             })()}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
-              {formColumns.map(col => {
-                const field = col.field || col.key;
-                const value = formData[field];
-                const inputType = col.inputType || 'text';
+            <div className="rounded-lg overflow-hidden border border-gray-200 my-3">
+              <div className="divide-y divide-gray-100">
+                {formColumns.map((col, idx) => {
+                  const field = col.field || col.key;
+                  const value = formData[field];
+                  const inputType = col.inputType || 'text';
+                  const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50';
 
-                return (
-                  <div key={field} className="space-y-1.5">
-                    <Label className="text-xs font-medium text-gray-700">{col.label}</Label>
-                    {inputType === 'boolean' ? (
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={!!value}
-                          onChange={e => setFormData(prev => ({ ...prev, [field]: e.target.checked }))}
-                          className="rounded border-gray-300"
-                        />
-                        <span className="text-sm text-gray-600">{col.label}</span>
-                      </label>
-                    ) : inputType === 'select' && col.selectOptions ? (
-                      <select
-                        value={String(value || '')}
-                        onChange={e => setFormData(prev => ({ ...prev, [field]: e.target.value }))}
-                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                      >
-                        <option value="">--</option>
-                        {col.selectOptions.map(opt => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <Input
-                        type={inputType === 'number' ? 'number' : inputType === 'date' ? 'date' : 'text'}
-                        value={String(value ?? '')}
-                        onChange={e => setFormData(prev => ({
-                          ...prev,
-                          [field]: inputType === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value,
-                        }))}
-                        className="border-gray-200"
-                      />
-                    )}
-                  </div>
-                );
-              })}
+                  return (
+                    <div key={field} className={`flex items-center gap-4 px-4 py-3 ${rowBg}`}>
+                      <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{col.label}</span>
+                      <div className="flex-1">
+                        {inputType === 'boolean' ? (
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={!!value}
+                              onChange={e => setFormData(prev => ({ ...prev, [field]: e.target.checked }))}
+                              className="rounded border-gray-300 text-primary-600"
+                            />
+                            <span className="text-sm text-gray-600">{value ? 'Yes' : 'No'}</span>
+                          </label>
+                        ) : inputType === 'select' && col.selectOptions ? (
+                          <select
+                            value={String(value || '')}
+                            onChange={e => setFormData(prev => ({ ...prev, [field]: e.target.value }))}
+                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none"
+                          >
+                            <option value="">--</option>
+                            {col.selectOptions.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <Input
+                            type={inputType === 'number' ? 'number' : inputType === 'date' ? 'date' : 'text'}
+                            value={String(value ?? '')}
+                            onChange={e => setFormData(prev => ({
+                              ...prev,
+                              [field]: inputType === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value,
+                            }))}
+                            className="border-gray-200 bg-white"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             <DialogFooter>
@@ -649,64 +706,90 @@ export default function PbCollectionTable({
 
       {/* Record Detail Dialog */}
       <Dialog open={!!detailRecord} onOpenChange={(open) => { if (!open) setDetailRecord(null); }}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto bg-[#F9F5EF]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
+            <DialogTitle className="flex items-center gap-2 text-base text-primary-800">
               <Eye className="h-5 w-5 text-primary-600" />
               {t('record_detail', 'Record Detail')}
             </DialogTitle>
-            <DialogDescription className="text-[13px]">{title}</DialogDescription>
+            <DialogDescription className="text-[13px] text-primary-600/70">{title}</DialogDescription>
           </DialogHeader>
 
-          {/* Action buttons — top */}
-          <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
-            {showEditBtn && (
-              <Button variant="outline" size="sm" onClick={() => {
-                if (detailRecord) {
-                  setDetailRecord(null);
-                  openEditForm(detailRecord);
-                }
-              }} className="gap-1.5 rounded-lg text-[13px]">
-                <Pencil className="h-3.5 w-3.5" />
-                {t('edit', 'Edit')}
-              </Button>
-            )}
-            <Button size="sm" onClick={() => setDetailRecord(null)} className="ml-auto rounded-lg text-[13px]">
-              {t('close', 'Close')}
-            </Button>
-          </div>
-
           {detailRecord && (
-            <div className="divide-y divide-gray-50">
-              {visibleColumns.map(col => {
-                const field = col.field || col.key;
-                const val = getValue(detailRecord, field);
-                const displayVal = col.render ? col.render(val, detailRecord) : String(val ?? '—');
-                return (
-                  <div key={col.key} className="flex py-2.5 gap-4 hover:bg-gray-50/50 -mx-2 px-2 rounded-md transition-colors">
-                    <span className="text-[13px] font-medium text-gray-400 w-1/3 shrink-0">{col.label}</span>
-                    <span className="text-[13px] text-gray-800 break-words">{displayVal}</span>
+            <>
+              <div ref={detailRef} className="bg-[#F9F5EF] p-1">
+                {/* Data fields card */}
+                <div className="rounded-lg overflow-hidden border border-primary-100/50">
+                  <div className="bg-primary-700 px-3 py-2">
+                    <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{title}</h3>
                   </div>
-                );
-              })}
-              {/* System fields */}
-              <div className="pt-3 mt-2 space-y-2">
-                <div className="flex gap-4 -mx-2 px-2">
-                  <span className="text-[13px] font-medium text-gray-400 w-1/3 shrink-0">ID</span>
-                  <span className="text-xs text-gray-400 font-mono">{String(detailRecord.id ?? '')}</span>
+                  <div className="divide-y divide-primary-50/80">
+                    {columns.map((col, idx) => {
+                      const field = col.field || col.key;
+                      const val = getValue(detailRecord, field);
+                      const displayVal = col.render ? col.render(val, detailRecord) : String(val ?? '—');
+                      return (
+                        <div key={col.key} className={`flex items-baseline gap-3 px-3 py-2.5 ${idx % 2 === 0 ? 'bg-white/60' : 'bg-[#F9F5EF]/60'}`}>
+                          <span className="text-[12px] font-semibold text-primary-600 w-2/5 shrink-0">{col.label}</span>
+                          <span className="text-[13px] font-medium text-[#1a3a3a] break-words flex-1">{displayVal}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="flex gap-4 -mx-2 px-2">
-                  <span className="text-[13px] font-medium text-gray-400 w-1/3 shrink-0">{t('created', 'Created')}</span>
-                  <span className="text-[13px] text-gray-600">{String(detailRecord.created ?? '')}</span>
-                </div>
-                <div className="flex gap-4 -mx-2 px-2">
-                  <span className="text-[13px] font-medium text-gray-400 w-1/3 shrink-0">{t('updated_at', 'Updated')}</span>
-                  <span className="text-[13px] text-gray-600">{String(detailRecord.updated ?? '')}</span>
+                {/* System fields card */}
+                <div className="rounded-lg overflow-hidden border border-primary-100/50 mt-3">
+                  <div className="bg-primary-700 px-3 py-2">
+                    <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('system', 'System')}</h3>
+                  </div>
+                  <div className="divide-y divide-primary-50/80">
+                    <div className="flex items-baseline gap-3 px-3 py-2.5 bg-white/60">
+                      <span className="text-[12px] font-semibold text-primary-600 w-2/5 shrink-0">ID</span>
+                      <span className="text-xs text-[#1a3a3a]/60 font-mono flex-1">{String(detailRecord.id ?? '')}</span>
+                    </div>
+                    <div className="flex items-baseline gap-3 px-3 py-2.5 bg-[#F9F5EF]/60">
+                      <span className="text-[12px] font-semibold text-primary-600 w-2/5 shrink-0">{t('created', 'Created')}</span>
+                      <span className="text-[13px] font-medium text-[#1a3a3a] flex-1">{String(detailRecord.created ?? '')}</span>
+                    </div>
+                    <div className="flex items-baseline gap-3 px-3 py-2.5 bg-white/60">
+                      <span className="text-[12px] font-semibold text-primary-600 w-2/5 shrink-0">{t('updated_at', 'Updated')}</span>
+                      <span className="text-[13px] font-medium text-[#1a3a3a] flex-1">{String(detailRecord.updated ?? '')}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
 
+              {/* Action buttons — compact, elegant */}
+              <div className="flex items-center gap-1.5 pt-3 border-t border-primary-100/50">
+                {showEditBtn && (
+                  <Button variant="ghost" size="sm" onClick={() => { setDetailRecord(null); openEditForm(detailRecord); }}
+                    className="h-7 gap-1 text-[11px] text-primary-700 hover:bg-primary-50 rounded-md px-2">
+                    <Pencil className="h-3 w-3" /> {t('edit', 'Edit')}
+                  </Button>
+                )}
+                {showDeleteBtn && (
+                  <Button variant="ghost" size="sm" onClick={() => { setDetailRecord(null); setDeleteId(detailRecord.id as string); }}
+                    className="h-7 gap-1 text-[11px] text-red-600 hover:bg-red-50 rounded-md px-2">
+                    <Trash2 className="h-3 w-3" /> {t('delete', 'Delete')}
+                  </Button>
+                )}
+                <div className="ml-auto flex items-center gap-1">
+                  <Button variant="ghost" size="sm" onClick={handleExportImage}
+                    className="h-7 gap-1 text-[11px] text-gray-500 hover:bg-gray-100 rounded-md px-2" title="Export as Image">
+                    <Image className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDetailExport('csv')}
+                    className="h-7 gap-1 text-[11px] text-gray-500 hover:bg-gray-100 rounded-md px-2" title="CSV">
+                    <FileText className="h-3 w-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleDetailExport('xlsx')}
+                    className="h-7 gap-1 text-[11px] text-gray-500 hover:bg-gray-100 rounded-md px-2" title="Excel">
+                    <FileSpreadsheet className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

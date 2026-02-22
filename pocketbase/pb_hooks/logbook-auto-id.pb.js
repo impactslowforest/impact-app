@@ -69,9 +69,7 @@ onRecordCreate((e) => {
   var logCode = prefix + seq;
   e.record.set("log_code", logCode);
 
-  if (!e.record.getString("farmer_name")) {
-    e.record.set("farmer_name", farmer.getString("full_name") || "");
-  }
+  // farmer_name removed (normalization) — use expand farmer.full_name in frontend
 
   console.log("[AutoID] farmer_log_books: " + logCode);
   e.next();
@@ -118,9 +116,7 @@ onRecordCreate((e) => {
   var logCode = prefix + seq;
   e.record.set("log_code", logCode);
 
-  if (!e.record.getString("farm_name")) {
-    e.record.set("farm_name", farm.getString("farm_name") || "");
-  }
+  // farm_name removed (normalization) — use expand farm.farm_name in frontend
 
   // Auto-link farmer_log_book if not provided
   if (!e.record.getString("farmer_log_book")) {
@@ -189,18 +185,10 @@ onRecordCreate((e) => {
   var logCode = prefix + seq;
   e.record.set("log_code", logCode);
 
-  if (!e.record.getString("farm_name")) {
-    e.record.set("farm_name", farm.getString("farm_name") || "");
-  }
+  // farm_name, farmer_name removed (normalization) — use expand in frontend
   if (!e.record.getString("farmer")) {
     var farmerFromFarm = farm.getString("farmer");
     if (farmerFromFarm) e.record.set("farmer", farmerFromFarm);
-  }
-  if (!e.record.getString("farmer_name") && e.record.getString("farmer")) {
-    try {
-      var farmerRec = e.app.findRecordById("farmers", e.record.getString("farmer"));
-      e.record.set("farmer_name", farmerRec.getString("full_name") || "");
-    } catch (err) { /* skip */ }
   }
 
   // Auto-link farm_log_book if not provided
@@ -287,9 +275,7 @@ onRecordCreate((e) => {
     var farmerLogFromFarmLog = farmLogBook.getString("farmer_log_book");
     if (farmerLogFromFarmLog) e.record.set("farmer_log_book", farmerLogFromFarmLog);
   }
-  if (!e.record.getString("farm_name")) {
-    e.record.set("farm_name", farm.getString("farm_name") || "");
-  }
+  // farm_name removed (normalization) — use expand farm.farm_name in frontend
 
   console.log("[AutoID] log_book_details: " + lotCode);
   e.next();

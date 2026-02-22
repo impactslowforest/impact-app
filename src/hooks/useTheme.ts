@@ -28,9 +28,9 @@ const COFFEE_CONFIG: ThemeConfig = {
   sectionIconBg: 'bg-primary-100/50',
   sectionIconHoverBg: 'group-hover:bg-primary-500',
   activeText: 'text-primary-800',
-  meshPrimary: 'bg-primary-500/5',
-  meshAccent: 'bg-accent-500/5',
-  bodyBg: 'bg-slate-50/50',
+  meshPrimary: 'bg-primary-500/10',
+  meshAccent: 'bg-secondary-300/15',
+  bodyBg: 'bg-[#EDE3D3]',
 };
 
 const CACAO_CONFIG: ThemeConfig = {

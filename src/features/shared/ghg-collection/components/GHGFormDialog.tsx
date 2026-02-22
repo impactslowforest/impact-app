@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useCreateGHGEmission, useUpdateGHGEmission, useFarmersList } from '../../farm-operations/hooks/useFarmOpsData';
@@ -20,6 +19,7 @@ export function GHGFormDialog({ country, open, onOpenChange, editingItem }: GHGF
     const updateMutation = useUpdateGHGEmission();
     const { data: farmers } = useFarmersList(country);
     const isEditing = !!editingItem;
+    const isPending = createMutation.isPending || updateMutation.isPending;
 
     useEffect(() => { if (open && formRef.current) formRef.current.reset(); }, [open, editingItem]);
 
@@ -45,40 +45,74 @@ export function GHGFormDialog({ country, open, onOpenChange, editingItem }: GHGF
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>{isEditing ? 'Edit GHG Record' : 'Add GHG Record'}</DialogTitle>
+                    <DialogTitle>{isEditing ? t('edit_record') : t('add_record')}</DialogTitle>
                 </DialogHeader>
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label>Farmer *</Label>
-                            <select name="farmer" required defaultValue={(editingItem?.farmer as string) ?? ''} className="w-full rounded-lg border px-3 py-2 text-sm">
-                                <option value="">Select farmer...</option>
-                                {farmers?.map((f) => <option key={f.id} value={f.id}>{f.full_name}</option>)}
-                            </select>
+                    {/* General Info */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('general_info', 'General Info')}</h3>
                         </div>
-                        <div className="space-y-1.5">
-                            <Label>Year *</Label>
-                            <Input name="year" type="number" required min="2020" max="2100" defaultValue={(editingItem?.year as number) ?? currentYear} className="rounded-lg" />
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('farmer_name')} *</span>
+                                <select name="farmer" required defaultValue={(editingItem?.farmer as string) ?? ''} className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none">
+                                    <option value="">{t('select_farmer', 'Select farmer...')}</option>
+                                    {farmers?.map((f) => <option key={f.id} value={f.id}>{f.full_name}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('ghg_year')} *</span>
+                                <Input name="year" type="number" required min="2020" max="2100" defaultValue={(editingItem?.year as number) ?? currentYear} className="flex-1 rounded-lg bg-white" />
+                            </div>
                         </div>
                     </div>
 
-                    <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">🏭 Emission Sources (tCO₂e)</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5"><Label>⚡ Electricity</Label><Input name="electricity_emissions_tco2e" type="number" step="0.001" defaultValue={(editingItem?.electricity_emissions_tco2e as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>⛽ Fuel Combustion</Label><Input name="fuel_combustion_emissions_tco2e" type="number" step="0.001" defaultValue={(editingItem?.fuel_combustion_emissions_tco2e as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>🧪 N-Fertilizer</Label><Input name="n_fert_emissions_tco2e" type="number" step="0.001" defaultValue={(editingItem?.n_fert_emissions_tco2e as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>🗑️ Waste</Label><Input name="waste_emissions_tco2e" type="number" step="0.001" defaultValue={(editingItem?.waste_emissions_tco2e as number) ?? ''} className="rounded-lg" /></div>
+                    {/* Emission Sources */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Emission Sources (tCO2e)</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Electricity</span>
+                                <Input name="electricity_emissions_tco2e" type="number" step="0.001" defaultValue={(editingItem?.electricity_emissions_tco2e as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Fuel Combustion</span>
+                                <Input name="fuel_combustion_emissions_tco2e" type="number" step="0.001" defaultValue={(editingItem?.fuel_combustion_emissions_tco2e as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">N-Fertilizer</span>
+                                <Input name="n_fert_emissions_tco2e" type="number" step="0.001" defaultValue={(editingItem?.n_fert_emissions_tco2e as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Waste</span>
+                                <Input name="waste_emissions_tco2e" type="number" step="0.001" defaultValue={(editingItem?.waste_emissions_tco2e as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Total Emissions</span>
+                                <Input name="total_emissions_tco2e" type="number" step="0.001" defaultValue={(editingItem?.total_emissions_tco2e as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                        <Label>🔥 Total Emissions (tCO₂e)</Label>
-                        <Input name="total_emissions_tco2e" type="number" step="0.001" defaultValue={(editingItem?.total_emissions_tco2e as number) ?? ''} className="rounded-lg" />
+                    {/* Notes */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('notes')}</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('notes')}</span>
+                                <Input name="notes" defaultValue={(editingItem?.notes as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="space-y-1.5"><Label>Notes</Label><Input name="notes" defaultValue={(editingItem?.notes as string) ?? ''} className="rounded-lg" /></div>
-
-                    <Button type="submit" className="w-full btn-3d-primary text-white rounded-lg" disabled={createMutation.isPending || updateMutation.isPending}>
-                        {isEditing ? t('save_changes', 'Save Changes') : 'Add Record'}
+                    {/* Submit */}
+                    <Button type="submit" className="w-full btn-3d-primary text-white rounded-lg" disabled={isPending}>
+                        {isEditing ? t('save_changes') : t('add_record')}
                     </Button>
                 </form>
             </DialogContent>

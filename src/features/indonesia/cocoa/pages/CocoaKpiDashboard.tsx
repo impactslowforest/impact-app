@@ -80,21 +80,11 @@ export default function CocoaKpiDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <button className="text-left" onClick={() => navigate(ROUTES.ID_COCOA_GROUPS)}>
-          <KpiCard title={t('farmer_groups', 'Farmer Groups')} value={groupCount} icon={Building2} color="text-green-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.ID_COCOA_BATCHES)}>
-          <KpiCard title={t('batches', 'Batches')} value={batchCount} icon={ClipboardList} color="text-amber-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.ID_COCOA_CONTRACTS)}>
-          <KpiCard title={t('contracts', 'Contracts')} value={contractCount} icon={FileCheck} color="text-blue-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.ID_COCOA_RECAPS)}>
-          <KpiCard title={t('total_sold_kg', 'Total Sold (kg)')} value={Math.round(totalSoldKrakakoa + totalSoldOthers).toLocaleString()} icon={Bean} color="text-orange-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.ID_COCOA_PRICES)}>
-          <KpiCard title={t('total_quota_kg', 'Total Quota (kg)')} value={Math.round(totalQuota).toLocaleString()} icon={DollarSign} color="text-purple-600" />
-        </button>
+        <KpiCard title={t('farmer_groups', 'Farmer Groups')} value={groupCount} icon={Building2} color="text-green-600" onClick={() => navigate(ROUTES.ID_COCOA_GROUPS)} />
+        <KpiCard title={t('batches', 'Batches')} value={batchCount} icon={ClipboardList} color="text-amber-600" onClick={() => navigate(ROUTES.ID_COCOA_BATCHES)} />
+        <KpiCard title={t('contracts', 'Contracts')} value={contractCount} icon={FileCheck} color="text-blue-600" onClick={() => navigate(ROUTES.ID_COCOA_CONTRACTS)} />
+        <KpiCard title={t('total_sold_kg', 'Total Sold (kg)')} value={Math.round(totalSoldKrakakoa + totalSoldOthers).toLocaleString()} icon={Bean} color="text-orange-600" onClick={() => navigate(ROUTES.ID_COCOA_RECAPS)} />
+        <KpiCard title={t('total_quota_kg', 'Total Quota (kg)')} value={Math.round(totalQuota).toLocaleString()} icon={DollarSign} color="text-purple-600" onClick={() => navigate(ROUTES.ID_COCOA_PRICES)} />
       </div>
 
       {/* Charts */}

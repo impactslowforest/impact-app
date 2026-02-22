@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useCreateComplianceRecord, useUpdateComplianceRecord, useFarmersList, useFarmsList } from '../../farm-operations/hooks/useFarmOpsData';
@@ -21,6 +20,7 @@ export function ComplianceFormDialog({ country, open, onOpenChange, editingItem 
     const { data: farmers } = useFarmersList(country);
     const { data: farms } = useFarmsList(country);
     const isEditing = !!editingItem;
+    const isPending = createMutation.isPending || updateMutation.isPending;
 
     useEffect(() => { if (open && formRef.current) formRef.current.reset(); }, [open, editingItem]);
 
@@ -30,7 +30,6 @@ export function ComplianceFormDialog({ country, open, onOpenChange, editingItem 
         const data: Record<string, unknown> = {};
         form.forEach((val, key) => { data[key] = val; });
         if (data.year) data.year = parseInt(data.year as string) || new Date().getFullYear();
-        // ALL Boolean fields
         const boolFields = [
             'production_plan_recorded', 'seed_purchase_notes', 'worker_ppe_available',
             'child_labor_check', 'access_drinking_water', 'hazardous_work_ppe',
@@ -48,115 +47,133 @@ export function ComplianceFormDialog({ country, open, onOpenChange, editingItem 
     };
 
     const currentYear = new Date().getFullYear();
+    const selectClasses = "flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>{isEditing ? 'Edit Compliance Record' : 'Add Compliance Record'}</DialogTitle>
+                    <DialogTitle>{isEditing ? t('edit_record') : t('add_record')}</DialogTitle>
                 </DialogHeader>
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-                    {/* Identity */}
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="space-y-1.5">
-                            <Label>Farmer *</Label>
-                            <select name="farmer" required defaultValue={(editingItem?.farmer as string) ?? ''} className="w-full rounded-lg border px-3 py-2 text-sm">
-                                <option value="">Select farmer...</option>
-                                {farmers?.map((f) => <option key={f.id} value={f.id}>{f.full_name}</option>)}
-                            </select>
+                    {/* General Info */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('general_info', 'General Info')}</h3>
                         </div>
-                        <div className="space-y-1.5">
-                            <Label>Farm</Label>
-                            <select name="farm" defaultValue={(editingItem?.farm as string) ?? ''} className="w-full rounded-lg border px-3 py-2 text-sm">
-                                <option value="">Select farm...</option>
-                                {farms?.map((f) => <option key={f.id} value={f.id}>{f.farm_name}</option>)}
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label>Year *</Label>
-                            <Input name="year" type="number" required min="2020" max="2100" defaultValue={(editingItem?.year as number) ?? currentYear} className="rounded-lg" />
-                        </div>
-                    </div>
-
-                    {/* ─── Risk & Status ─── */}
-                    <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">⚠️ Risk & Status</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label>Contamination Risk Level</Label>
-                            <select name="contamination_risk_level" defaultValue={(editingItem?.contamination_risk_level as string) ?? 'none'} className="w-full rounded-lg border px-3 py-2 text-sm">
-                                <option value="none">None</option><option value="low">Low</option><option value="moderate">Moderate</option><option value="high">High</option>
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label>Corrective Action Status</Label>
-                            <select name="corrective_action_status" defaultValue={(editingItem?.corrective_action_status as string) ?? 'na'} className="w-full rounded-lg border px-3 py-2 text-sm">
-                                <option value="na">N/A</option><option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* ─── Compliance Checklist (all bool fields) ─── */}
-                    <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">✅ Compliance Checklist</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                        {[
-                            { name: 'production_plan_recorded', label: '📋 Production plan recorded' },
-                            { name: 'seed_purchase_notes', label: '🌱 Seed purchase notes kept' },
-                            { name: 'worker_ppe_available', label: '🦺 Worker PPE available' },
-                            { name: 'child_labor_check', label: '👶 No child labor' },
-                            { name: 'access_drinking_water', label: '💧 Drinking water access' },
-                            { name: 'hazardous_work_ppe', label: '⚠️ Hazardous work PPE' },
-                            { name: 'land_conversion_check', label: '🏔️ No land conversion' },
-                            { name: 'wildlife_protection', label: '🦜 Wildlife protection' },
-                            { name: 'fire_usage_policy', label: '🔥 Fire usage policy' },
-                            { name: 'compost_production', label: '♻️ Compost production' },
-                            { name: 'compost_storage_distance', label: '📏 Compost 25m from water' },
-                        ].map(({ name, label }) => (
-                            <div key={name} className="flex items-center gap-2">
-                                <input type="checkbox" id={`comp_${name}`} name={name} defaultChecked={!!editingItem?.[name]} className="h-4 w-4 rounded border-gray-300" />
-                                <Label htmlFor={`comp_${name}`} className="cursor-pointer text-sm">{label}</Label>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('farmer_name')} *</span>
+                                <select name="farmer" required defaultValue={(editingItem?.farmer as string) ?? ''} className={selectClasses}>
+                                    <option value="">{t('select_farmer', 'Select farmer...')}</option>
+                                    {farmers?.map((f) => <option key={f.id} value={f.id}>{f.full_name}</option>)}
+                                </select>
                             </div>
-                        ))}
-                    </div>
-
-                    {/* ─── Text Detail Fields ─── */}
-                    <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">📝 Details</h4>
-                    <div className="space-y-1.5">
-                        <Label>Protective Measures</Label>
-                        <Input name="protective_measures" defaultValue={(editingItem?.protective_measures as string) ?? ''} placeholder="Describe protective measures taken..." className="rounded-lg" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label>Non-Compliance Record</Label>
-                        <Input name="non_compliance_record" defaultValue={(editingItem?.non_compliance_record as string) ?? ''} placeholder="Previous issues recorded..." className="rounded-lg" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label>Waste Management</Label>
-                        <Input name="waste_management" defaultValue={(editingItem?.waste_management as string) ?? ''} placeholder="Waste disposal practices..." className="rounded-lg" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label>Residue Management</Label>
-                        <Input name="residue_management" defaultValue={(editingItem?.residue_management as string) ?? ''} placeholder="How crop residues are handled..." className="rounded-lg" />
-                    </div>
-
-                    {/* ─── Worker Safety ─── */}
-                    <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">🩺 Worker Safety</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label>Work Accident Records</Label>
-                            <Input name="work_accident_records" defaultValue={(editingItem?.work_accident_records as string) ?? ''} placeholder="Any accidents recorded..." className="rounded-lg" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label>First Aid Availability</Label>
-                            <Input name="first_aid_availability" defaultValue={(editingItem?.first_aid_availability as string) ?? ''} placeholder="e.g. Kit available, trained staff" className="rounded-lg" />
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('farm')}</span>
+                                <select name="farm" defaultValue={(editingItem?.farm as string) ?? ''} className={selectClasses}>
+                                    <option value="">{t('select_farm', 'Select farm...')}</option>
+                                    {farms?.map((f) => <option key={f.id} value={f.id}>{f.farm_name}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('ghg_year')} *</span>
+                                <Input name="year" type="number" required min="2020" max="2100" defaultValue={(editingItem?.year as number) ?? currentYear} className="flex-1 rounded-lg bg-white" />
+                            </div>
                         </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                        <Label>Notes</Label>
-                        <Input name="notes" defaultValue={(editingItem?.notes as string) ?? ''} className="rounded-lg" />
+                    {/* Risk & Status */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Risk & Status</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Contamination Risk</span>
+                                <select name="contamination_risk_level" defaultValue={(editingItem?.contamination_risk_level as string) ?? 'none'} className={selectClasses}>
+                                    <option value="none">None</option><option value="low">Low</option><option value="moderate">Moderate</option><option value="high">High</option>
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('correction_status')}</span>
+                                <select name="corrective_action_status" defaultValue={(editingItem?.corrective_action_status as string) ?? 'na'} className={selectClasses}>
+                                    <option value="na">N/A</option><option value="pending">Pending</option><option value="in_progress">In Progress</option><option value="resolved">Resolved</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
-                    <Button type="submit" className="w-full btn-3d-primary text-white rounded-lg" disabled={createMutation.isPending || updateMutation.isPending}>
-                        {isEditing ? t('save_changes', 'Save Changes') : 'Add Record'}
+                    {/* Compliance Checklist */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Compliance Checklist</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            {[
+                                { name: 'production_plan_recorded', label: 'Production Plan Recorded' },
+                                { name: 'seed_purchase_notes', label: 'Seed Purchase Notes Kept' },
+                                { name: 'worker_ppe_available', label: 'Worker PPE Available' },
+                                { name: 'child_labor_check', label: 'No Child Labor' },
+                                { name: 'access_drinking_water', label: 'Drinking Water Access' },
+                                { name: 'hazardous_work_ppe', label: 'Hazardous Work PPE' },
+                                { name: 'land_conversion_check', label: 'No Land Conversion' },
+                                { name: 'wildlife_protection', label: 'Wildlife Protection' },
+                                { name: 'fire_usage_policy', label: 'Fire Usage Policy' },
+                                { name: 'compost_production', label: 'Compost Production' },
+                                { name: 'compost_storage_distance', label: 'Compost 25m from Water' },
+                            ].map(({ name, label }, idx) => (
+                                <div key={name} className={`flex items-center gap-4 px-4 py-3 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                                    <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{label}</span>
+                                    <div className="flex-1 flex items-center gap-2">
+                                        <input type="checkbox" id={`comp_${name}`} name={name} defaultChecked={!!editingItem?.[name]} className="h-4 w-4 rounded border-gray-300 accent-primary-600" />
+                                        <label htmlFor={`comp_${name}`} className="text-sm text-gray-600 cursor-pointer select-none">Yes</label>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Details & Worker Safety */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Details & Worker Safety</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Protective Measures</span>
+                                <Input name="protective_measures" defaultValue={(editingItem?.protective_measures as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Non-Compliance Record</span>
+                                <Input name="non_compliance_record" defaultValue={(editingItem?.non_compliance_record as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Waste Management</span>
+                                <Input name="waste_management" defaultValue={(editingItem?.waste_management as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('residue_management')}</span>
+                                <Input name="residue_management" defaultValue={(editingItem?.residue_management as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('work_accident_records')}</span>
+                                <Input name="work_accident_records" defaultValue={(editingItem?.work_accident_records as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('first_aid_availability')}</span>
+                                <Input name="first_aid_availability" defaultValue={(editingItem?.first_aid_availability as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('notes')}</span>
+                                <Input name="notes" defaultValue={(editingItem?.notes as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Submit */}
+                    <Button type="submit" className="w-full btn-3d-primary text-white rounded-lg" disabled={isPending}>
+                        {isEditing ? t('save_changes') : t('add_record')}
                     </Button>
                 </form>
             </DialogContent>

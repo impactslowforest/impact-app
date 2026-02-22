@@ -289,7 +289,7 @@ export default function QRIntakeVerification() {
                             </CardHeader>
                             <CardContent className="p-0">
                                 <Table>
-                                    <TableHeader className="bg-gray-50">
+                                    <TableHeader className="bg-primary-700 [&_th]:text-white">
                                         <TableRow>
                                             <TableHead className="text-xs">{t('common:date', 'Date')}</TableHead>
                                             <TableHead className="text-xs">{t('common:crop', 'Crop')}</TableHead>
@@ -335,7 +335,7 @@ export default function QRIntakeVerification() {
                             </CardHeader>
                             <CardContent className="p-0">
                                 <Table>
-                                    <TableHeader className="bg-gray-50">
+                                    <TableHeader className="bg-primary-700 [&_th]:text-white">
                                         <TableRow>
                                             <TableHead className="text-xs">{t('common:type', 'Type')}</TableHead>
                                             <TableHead className="text-xs">{t('common:date', 'Date')}</TableHead>

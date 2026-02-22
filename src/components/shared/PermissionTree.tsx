@@ -229,7 +229,7 @@ export function PermissionTree({
 
     return (
         <div className="border border-gray-100 rounded-xl bg-white/50 backdrop-blur-sm shadow-sm overflow-hidden border-indigo-100/30">
-            <div className="flex items-center bg-gray-50/80 px-4 py-2.5 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+            <div className="flex items-center bg-primary-700 px-4 py-2.5 border-b border-primary-800 text-[10px] font-bold text-white uppercase tracking-widest">
                 <div className="flex-1">Hạng mục hệ thống</div>
                 <div className="flex items-center gap-2 sm:gap-6 px-4">
                     {ACTIONS.map(a => (

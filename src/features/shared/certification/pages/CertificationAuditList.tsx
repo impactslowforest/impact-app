@@ -65,10 +65,13 @@ export default function CertificationAuditList() {
                         filters.push(`(country = "${countryFilter}" || country = "" || country = null)`);
                     }
 
-                    return (await pb.collection(coll).getFullList({
+                    const opts: any = {
                         filter: filters.join(' && '),
                         sort: '-created',
-                    })).map(item => ({ ...item, type }));
+                    };
+                    if (coll === 'eu_organic_farm_inspections') opts.expand = 'farmer,farm';
+                    else if (coll === 'eu_organic_inspections') opts.expand = 'farmer';
+                    return (await pb.collection(coll).getFullList(opts)).map(item => ({ ...item, type }));
                 } catch (e) {
                     console.warn(`Fetch failed for ${coll}:`, e);
                     return [];
@@ -139,7 +142,7 @@ export default function CertificationAuditList() {
                     data={(audits || []).map((a: any) => ({
                         type: getTypeLabel(a.type),
                         date: new Date(a.audit_date || a.inspection_date || a.created).toLocaleDateString(),
-                        location: a.audit_location || a.farm_name || a.inspection_id || '',
+                        location: a.audit_location || (a.expand as any)?.farm?.farm_name || a.inspection_id || '',
                         auditor: a.auditor_name || a.inspector_name || 'System',
                         country: a.country || 'Global',
                         status: a.status || '',
@@ -261,7 +264,7 @@ export default function CertificationAuditList() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="font-semibold text-gray-900">
-                                                {audit.audit_location || audit.farm_name || audit.inspection_id}
+                                                {audit.audit_location || (audit.expand as any)?.farm?.farm_name || audit.inspection_id}
                                             </div>
                                             <div className="text-[11px] text-gray-500 truncate max-w-[200px]">
                                                 ID: {audit.id}

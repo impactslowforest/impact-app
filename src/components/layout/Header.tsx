@@ -9,6 +9,13 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { CommodityIcon } from '@/components/shared/CommodityIcon';
+import { useUIStore } from '@/stores/ui-store';
+
+const COUNTRY_INFO: Record<string, { name: string; iso: string }> = {
+  vietnam: { name: 'Vietnam', iso: 'vn' },
+  laos: { name: 'Laos', iso: 'la' },
+  indonesia: { name: 'Indonesia', iso: 'id' },
+};
 
 function Clock() {
   const [now, setNow] = useState(new Date());
@@ -33,24 +40,32 @@ export function Header() {
   const { t } = useTranslation();
   const isOnline = useOnlineStatus();
   const { user, logout } = useAuth();
-  const { headerGradient, commodity } = useTheme();
+  const { headerGradient } = useTheme();
+  const activeCountry = useUIStore((s) => s.activeCountry);
 
   return (
-    <header className={`sticky top-0 z-40 flex h-14 items-center bg-gradient-to-r ${headerGradient} px-3 shadow-lg md:px-4`}>
+    <header className={`sticky top-0 z-40 flex h-16 items-center bg-gradient-to-r ${headerGradient} px-3 shadow-lg md:px-4`}>
       {/* Left: Sidebar trigger + Commodity icon */}
       <div className="flex items-center gap-2.5">
         <SidebarTrigger className="text-white/80 hover:bg-white/10 hover:text-white" />
         <CommodityIcon className="h-5 w-5 text-white/50 hidden sm:block" />
       </div>
 
-      {/* Center: App title */}
-      <div className="flex-1 text-center">
+      {/* Center: App title + country indicator */}
+      <div className="flex-1 flex flex-col items-center justify-center">
         <h1 className="text-lg font-extrabold text-white tracking-wider uppercase sm:text-xl md:text-2xl drop-shadow-sm">
           Impact — Slow Forest
         </h1>
-        <span className="text-[10px] text-white/50 uppercase tracking-[0.2em] hidden md:block">
-          {commodity} Supply Chain
-        </span>
+        {activeCountry !== 'all' && COUNTRY_INFO[activeCountry] && (
+          <span className="inline-flex items-center justify-center gap-1.5 text-[10px] text-white/80 uppercase tracking-[0.15em] hidden md:flex">
+            <img
+              src={`https://flagcdn.com/w20/${COUNTRY_INFO[activeCountry].iso}.png`}
+              alt={COUNTRY_INFO[activeCountry].name}
+              className="h-3 w-4 rounded-[1px] object-cover"
+            />
+            Working in {COUNTRY_INFO[activeCountry].name}
+          </span>
+        )}
       </div>
 
       {/* Right: Clock + Status + Language + Logout */}

@@ -16,7 +16,7 @@ interface ProcessingTabProps {
 const farmerLogColumns: ColumnDef[] = [
   { key: 'log_code', label: 'Log Code' },
   { key: 'village_code', label: 'Village Code' },
-  { key: 'farmer_name', label: 'Farmer' },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name' },
   { key: 'variety', label: 'Variety' },
   { key: 'process', label: 'Process' },
   { key: 'eu_organic_kg', label: 'EU Organic (kg)' },
@@ -34,7 +34,7 @@ const farmerLogColumns: ColumnDef[] = [
 const farmLogColumns: ColumnDef[] = [
   { key: 'log_code', label: 'Log Code' },
   { key: 'village_code', label: 'Village Code' },
-  { key: 'farm_name', label: 'Farm' },
+  { key: 'farm_name', label: 'Farm', field: 'farm.farm_name' },
   { key: 'certificate', label: 'Certificate' },
   { key: 'variety', label: 'Variety' },
   { key: 'process', label: 'Process' },
@@ -51,8 +51,8 @@ const farmLogColumns: ColumnDef[] = [
 const harvestingLogColumns: ColumnDef[] = [
   { key: 'log_code', label: 'Log Code' },
   { key: 'village_code', label: 'Village Code' },
-  { key: 'farmer_name', label: 'Farmer' },
-  { key: 'farm_name', label: 'Farm' },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name' },
+  { key: 'farm_name', label: 'Farm', field: 'farm.farm_name' },
   { key: 'variety', label: 'Variety' },
   { key: 'species', label: 'Species' },
   { key: 'picking_date', label: 'Picking Date', render: (v) => v ? String(v).split(' ')[0] : '' },
@@ -72,7 +72,7 @@ const harvestingLogColumns: ColumnDef[] = [
 const lotDetailColumns: ColumnDef[] = [
   { key: 'lot_code', label: 'Lot Code' },
   { key: 'village_code', label: 'Village Code' },
-  { key: 'farm_name', label: 'Farm' },
+  { key: 'farm_name', label: 'Farm', field: 'farm.farm_name' },
   { key: 'certificate', label: 'Certificate' },
   { key: 'variety', label: 'Variety' },
   { key: 'process', label: 'Process' },
@@ -120,7 +120,7 @@ export function ProcessingTab({ country, farmerId, farmerName }: ProcessingTabPr
     setDrill({
       level: 'farm_log',
       farmerLogId: id,
-      farmerLogCode: String(record.log_code || record.farmer_name || id),
+      farmerLogCode: String(record.log_code || (record.expand as any)?.farmer?.full_name || id),
     });
   };
 
@@ -131,7 +131,7 @@ export function ProcessingTab({ country, farmerId, farmerName }: ProcessingTabPr
       farmLogId: id,
       farmLogCode: String(record.log_code || id),
       farmId: String(record.farm || ''),
-      farmName: String(record.farm_name || record.log_code || id),
+      farmName: String((record.expand as any)?.farm?.farm_name || record.log_code || id),
     }));
   };
 
@@ -219,29 +219,29 @@ export function ProcessingTab({ country, farmerId, farmerName }: ProcessingTabPr
 
   // Filter definitions per drill level
   const farmerLogFilters: FilterDef[] = [
-    { key: 'farmer_name', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer_name' },
+    { key: 'farmer_name', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer.full_name' },
     { key: 'village', label: t('village', 'Village'), type: 'text', field: 'village_code' },
     { key: 'date', label: t('log_date', 'Log Date'), type: 'date_range', field: 'log_date' },
     { key: 'season', label: t('season', 'Season'), type: 'select', field: 'season', options: seasonOptions },
   ];
 
   const farmLogFilters: FilterDef[] = [
-    { key: 'farm_name', label: t('farm', 'Farm'), type: 'text', field: 'farm_name' },
+    { key: 'farm_name', label: t('farm', 'Farm'), type: 'text', field: 'farm.farm_name' },
     { key: 'village', label: t('village', 'Village'), type: 'text', field: 'village_code' },
     { key: 'date', label: t('log_date', 'Log Date'), type: 'date_range', field: 'log_date' },
     { key: 'season', label: t('season', 'Season'), type: 'select', field: 'season', options: seasonOptions },
   ];
 
   const harvestingFilters: FilterDef[] = [
-    { key: 'farmer_name', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer_name' },
-    { key: 'farm_name', label: t('farm', 'Farm'), type: 'text', field: 'farm_name' },
+    { key: 'farmer_name', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer.full_name' },
+    { key: 'farm_name', label: t('farm', 'Farm'), type: 'text', field: 'farm.farm_name' },
     { key: 'village', label: t('village', 'Village'), type: 'text', field: 'village_code' },
     { key: 'date', label: t('picking_date', 'Picking Date'), type: 'date_range', field: 'picking_date' },
     { key: 'season', label: t('season', 'Season'), type: 'select', field: 'season', options: seasonOptions },
   ];
 
   const lotDetailFilters: FilterDef[] = [
-    { key: 'farm_name', label: t('farm', 'Farm'), type: 'text', field: 'farm_name' },
+    { key: 'farm_name', label: t('farm', 'Farm'), type: 'text', field: 'farm.farm_name' },
     { key: 'certificate', label: t('certificate', 'Certificate'), type: 'text', field: 'certificate' },
     { key: 'date', label: t('log_date', 'Log Date'), type: 'date_range', field: 'log_date' },
     { key: 'season', label: t('season', 'Season'), type: 'select', field: 'season', options: seasonOptions },
@@ -286,6 +286,13 @@ export function ProcessingTab({ country, farmerId, farmerName }: ProcessingTabPr
       currentFilter = currentFilter ? `${currentFilter} && ${farmLogFilter}` : farmLogFilter;
     }
   }
+
+  // Determine expand based on current collection
+  let currentExpand: string | undefined;
+  if (drill.level === 'farmer_log') currentExpand = 'farmer';
+  else if (drill.level === 'farm_log') currentExpand = 'farm';
+  else if (drill.level === 'harvesting_log') currentExpand = 'farmer,farm';
+  else if (drill.level === 'lot_detail') currentExpand = 'farm';
 
   return (
     <div className="space-y-3">
@@ -347,6 +354,7 @@ export function ProcessingTab({ country, farmerId, farmerName }: ProcessingTabPr
         columns={currentColumns}
         baseFilter={currentFilter}
         sort="-created"
+        expand={currentExpand}
         onRowClick={onRowClick}
         filterDefs={currentFilterDefs}
       />

@@ -292,60 +292,72 @@ export function FarmFormDialog({
 
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
           {/* Farmer selector */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-gray-700">{t('farmer')} *</Label>
-            <select
-              name="farmer"
-              required
-              defaultValue={(editingItem?.farmer as string) ?? preselectedFarmer ?? ''}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-            >
-              <option value="">{t('select_farmer')}</option>
-              {farmers?.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.full_name} ({f.farmer_code})
-                </option>
-              ))}
-            </select>
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="bg-primary-700 px-4 py-2">
+              <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('farmer')}</h3>
+            </div>
+            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+              <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('farmer')} *</span>
+              <select
+                name="farmer"
+                required
+                defaultValue={(editingItem?.farmer as string) ?? preselectedFarmer ?? ''}
+                className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none"
+              >
+                <option value="">{t('select_farmer')}</option>
+                {farmers?.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.full_name} ({f.farmer_code})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Data-driven field groups */}
           {FARM_FIELD_GROUPS.map((group) => (
-            <fieldset key={group.title} className="space-y-3">
-              <legend className="text-sm font-semibold text-primary-800 border-b border-primary-100 pb-1 mb-2 w-full">
-                {group.title}
-              </legend>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {group.fields.map((field) => {
+            <div key={group.title} className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              {/* Section header */}
+              <div className="bg-primary-700 px-4 py-2.5">
+                <h3 className="text-sm font-bold text-white tracking-wide">{group.title}</h3>
+              </div>
+              {/* Fields as table-like rows */}
+              <div className="divide-y divide-gray-100">
+                {group.fields.map((field, idx) => {
                   const isReadonly = isEditing && field.readonlyOnEdit;
-                  const span = field.colSpan === 2 ? 'sm:col-span-2' : '';
+                  const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50';
 
                   if (field.type === 'boolean') {
                     return (
-                      <div key={field.name} className={`flex items-center gap-2 ${span}`}>
-                        <input
-                          type="checkbox"
-                          id={`farm-${field.name}`}
-                          name={field.name}
-                          defaultChecked={boolVal(field.name)}
-                          className="h-4 w-4 rounded border-gray-300"
-                          disabled={isReadonly}
-                        />
-                        <Label htmlFor={`farm-${field.name}`} className="text-xs cursor-pointer">{field.label}</Label>
+                      <div key={field.name} className={`flex items-center gap-4 px-4 py-3 ${rowBg}`}>
+                        <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">
+                          {field.label}
+                        </span>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            id={`farm-${field.name}`}
+                            name={field.name}
+                            defaultChecked={boolVal(field.name)}
+                            className="h-4 w-4 rounded border-gray-300 text-primary-600"
+                            disabled={isReadonly}
+                          />
+                          <span className="text-sm text-gray-600">{boolVal(field.name) ? 'Yes' : 'No'}</span>
+                        </label>
                       </div>
                     );
                   }
 
                   if (field.type === 'select' && field.options) {
                     return (
-                      <div key={field.name} className={`space-y-1.5 ${span}`}>
-                        <Label className="text-xs font-medium text-gray-700">
+                      <div key={field.name} className={`flex items-center gap-4 px-4 py-3 ${rowBg}`}>
+                        <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">
                           {field.label}{field.required ? ' *' : ''}
-                        </Label>
+                        </span>
                         <select
                           name={field.name}
                           defaultValue={String(val(field.name) || field.options[0]?.value || '')}
-                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-50"
+                          className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none"
                           disabled={isReadonly}
                           required={field.required}
                         >
@@ -358,10 +370,10 @@ export function FarmFormDialog({
                   }
 
                   return (
-                    <div key={field.name} className={`space-y-1.5 ${span}`}>
-                      <Label className="text-xs font-medium text-gray-700">
+                    <div key={field.name} className={`flex items-center gap-4 px-4 py-3 ${rowBg}`}>
+                      <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">
                         {field.label}{field.required ? ' *' : ''}
-                      </Label>
+                      </span>
                       <Input
                         name={field.name}
                         type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
@@ -371,37 +383,37 @@ export function FarmFormDialog({
                         defaultValue={val(field.name)}
                         readOnly={isReadonly}
                         tabIndex={isReadonly ? -1 : undefined}
-                        className={`rounded-lg text-sm ${isReadonly ? 'bg-gray-50 text-gray-500' : ''}`}
+                        className={`flex-1 rounded-lg text-sm ${isReadonly ? 'bg-gray-100 text-gray-500' : 'bg-white'}`}
                       />
                     </div>
                   );
                 })}
               </div>
-            </fieldset>
+            </div>
           ))}
 
           {/* JSON fields */}
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-semibold text-primary-800 border-b border-primary-100 pb-1 mb-2 w-full">
-              Advanced Data (JSON)
-            </legend>
-            <div className="grid grid-cols-1 gap-3">
-              {JSON_FIELDS.map((jf) => (
-                <div key={jf} className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700">
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="bg-primary-700 px-4 py-2.5">
+              <h3 className="text-sm font-bold text-white tracking-wide">Advanced Data (JSON)</h3>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {JSON_FIELDS.map((jf, idx) => (
+                <div key={jf} className={`flex items-start gap-4 px-4 py-3 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                  <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0 pt-2">
                     {jf.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                  </Label>
+                  </span>
                   <textarea
                     name={`__json_${jf}`}
                     defaultValue={jsonVal(jf)}
                     rows={2}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs font-mono resize-y"
+                    className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-mono resize-y focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none"
                     placeholder="{}"
                   />
                 </div>
               ))}
             </div>
-          </fieldset>
+          </div>
 
           {/* Data entry info */}
           <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500 space-y-1">

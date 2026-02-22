@@ -6,8 +6,8 @@ const columns: ColumnDef[] = [
   { key: 'source', label: 'Source' },
   { key: 'input_type', label: 'Input Type' },
   { key: 'village_code', label: 'Village Code' },
-  { key: 'village_name', label: 'Village' },
-  { key: 'farmer_name', label: 'Farmer' },
+  { key: 'village_name', label: 'Village', field: 'farm.village' },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name' },
   { key: 'request_date', label: 'Request Date', render: (v) => v ? String(v).split(' ')[0] : '' },
   { key: 'variety', label: 'Variety' },
   { key: 'process', label: 'Process' },
@@ -31,8 +31,8 @@ const seasonOpts = [
 ];
 
 const filters: FilterDef[] = [
-  { key: 'farmer', label: 'Farmer', type: 'text', field: 'farmer_name' },
-  { key: 'village', label: 'Village', type: 'text', field: 'village_name' },
+  { key: 'farmer', label: 'Farmer', type: 'text', field: 'farmer.full_name' },
+  { key: 'village', label: 'Village', type: 'text', field: 'farm.village' },
   { key: 'date', label: 'Request Date', type: 'date_range', field: 'request_date' },
   { key: 'season', label: 'Season', type: 'select', field: 'season', options: seasonOpts },
   { key: 'status', label: 'Status', type: 'select', field: 'status', options: [
@@ -56,6 +56,7 @@ export default function InboundRequestList({ country }: Props) {
       columns={columns}
       filterDefs={filters}
       baseFilter={baseFilter}
+      expand="farmer,farm,supplier"
     />
   );
 }

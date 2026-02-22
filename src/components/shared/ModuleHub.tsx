@@ -55,19 +55,22 @@ export default function ModuleHub({ title, breadcrumb = [], sections }: ModuleHu
         const color = section.color || 'text-green-700';
 
         return (
-          <div key={sIdx} className="space-y-3">
+          <div key={sIdx} className="space-y-3.5">
             {/* Section Header */}
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-50">
-                <SectionIcon className={`h-4 w-4 ${color}`} />
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-100/80 to-primary-50/50 shadow-sm">
+                <SectionIcon className={`h-4.5 w-4.5 ${color}`} />
               </div>
-              <h2 className={`text-[15px] font-bold ${color}`}>
-                {sIdx + 1}. {section.title}
-              </h2>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Section {sIdx + 1}</p>
+                <h2 className={`text-[15px] font-bold ${color} -mt-0.5`}>
+                  {section.title}
+                </h2>
+              </div>
             </div>
 
             {/* Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
               {section.cards.map((card, cIdx) => (
                 <ModuleCard
                   key={cIdx}

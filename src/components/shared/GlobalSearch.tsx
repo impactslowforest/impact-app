@@ -60,17 +60,17 @@ const COLLECTION_CONFIG: Record<string, {
   eudr_plots: {
     label: 'EUDR Plots',
     icon: ShieldCheck,
-    fields: ['plot_name', 'farmer_name'],
+    fields: ['plot_name', 'plot_code'],
     titleField: 'plot_name',
-    subtitleField: 'farmer_name',
+    subtitleField: 'plot_code',
     path: ROUTES.IMPACT_EUDR,
   },
   ra_audits: {
     label: 'RA Audits',
     icon: FileCheck,
-    fields: ['auditor_name', 'audit_location'],
-    titleField: 'auditor_name',
-    subtitleField: 'audit_location',
+    fields: ['audit_location'],
+    titleField: 'audit_location',
+    subtitleField: 'overall_result',
     path: ROUTES.IMPACT_CERTIFICATION,
   },
 };

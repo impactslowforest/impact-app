@@ -163,29 +163,22 @@ export default function EudrAssessmentPage() {
 
   const { data: plot } = useQuery({
     queryKey: ['eudr-plot', plotId],
-    queryFn: () => pb.collection('eudr_plots').getOne(plotId!),
+    queryFn: () => pb.collection('eudr_plots').getOne(plotId!, { expand: 'farmer' }),
     enabled: !!plotId,
   });
 
-  // Linked farmer profile from farmers collection
+  // Linked farmer profile from the relation (or fallback lookup by farmer_id code)
   const { data: linkedFarmer } = useQuery({
-    queryKey: ['eudr-linked-farmer', plot?.farmer_id, plot?.farmer_name],
+    queryKey: ['eudr-linked-farmer', plot?.farmer, plot?.farmer_id],
     queryFn: async () => {
       if (!plot) return null;
-      // Try farmer_id match first (farmer_code or id_card_number)
+      // Use the farmer relation if available
+      if ((plot.expand as any)?.farmer) return (plot.expand as any).farmer;
+      // Fallback: lookup by farmer_id code
       if (plot.farmer_id) {
         try {
           const r = await pb.collection('farmers').getList(1, 1, {
             filter: `farmer_code = "${plot.farmer_id}" || id_card_number = "${plot.farmer_id}"`,
-          });
-          if (r.items.length > 0) return r.items[0];
-        } catch { /* ignore */ }
-      }
-      // Fallback: fuzzy match on farmer_name
-      if (plot.farmer_name) {
-        try {
-          const r = await pb.collection('farmers').getList(1, 1, {
-            filter: `full_name ~ "${plot.farmer_name}"`,
           });
           if (r.items.length > 0) return r.items[0];
         } catch { /* ignore */ }
@@ -342,7 +335,7 @@ export default function EudrAssessmentPage() {
             <Badge variant="outline" className="font-mono font-bold">{plot.plot_code}</Badge>
             <span className="font-medium">{plot.plot_name}</span>
             <Badge variant="outline" className="capitalize">{plot.country}</Badge>
-            {plot.farmer_name && <span>— {plot.farmer_name}</span>}
+            {(plot.expand as any)?.farmer?.full_name && <span>— {(plot.expand as any).farmer.full_name}</span>}
           </div>
         )}
 

@@ -13,12 +13,12 @@ import { cn } from '@/lib/utils';
 
 type StatusColor = 'gray' | 'yellow' | 'green' | 'red' | 'blue';
 
-const COLOR_MAP: Record<StatusColor, string> = {
-  gray:   'bg-gray-100 text-gray-700 border-gray-300',
-  yellow: 'bg-amber-50 text-amber-700 border-amber-300',
-  green:  'bg-green-50 text-green-700 border-green-300',
-  red:    'bg-red-50 text-red-700 border-red-300',
-  blue:   'bg-blue-50 text-blue-700 border-blue-300',
+const COLOR_MAP: Record<StatusColor, { badge: string; dot: string }> = {
+  gray:   { badge: 'bg-gray-50 text-gray-600 ring-1 ring-gray-200',          dot: 'bg-gray-400' },
+  yellow: { badge: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',       dot: 'bg-amber-500' },
+  green:  { badge: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200', dot: 'bg-emerald-500' },
+  red:    { badge: 'bg-red-50 text-red-700 ring-1 ring-red-200',             dot: 'bg-red-500' },
+  blue:   { badge: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',          dot: 'bg-blue-500' },
 };
 
 const STATUS_COLORS: Record<string, StatusColor> = {
@@ -87,11 +87,12 @@ export default function StatusBadge({ value, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize',
-        COLOR_MAP[color],
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize',
+        COLOR_MAP[color].badge,
         className,
       )}
     >
+      <span className={cn('h-1.5 w-1.5 rounded-full', COLOR_MAP[color].dot)} />
       {text}
     </span>
   );

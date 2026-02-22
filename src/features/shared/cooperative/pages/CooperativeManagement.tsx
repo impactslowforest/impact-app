@@ -71,8 +71,8 @@ export function CooperativeManagement({ country = 'laos' }: CooperativeManagemen
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <StatsSummaryCards country={country} />
+      {/* Stats Cards — clickable to switch tabs */}
+      <StatsSummaryCards country={country} onCardClick={(tab) => setActiveTab(tab as TabKey)} />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)}>

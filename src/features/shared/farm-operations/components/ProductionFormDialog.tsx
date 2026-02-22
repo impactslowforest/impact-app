@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useCreateProductionRecord, useUpdateProductionRecord, useFarmersList } from '../hooks/useFarmOpsData';
@@ -20,6 +19,7 @@ export function ProductionFormDialog({ country, open, onOpenChange, editingItem 
     const updateMutation = useUpdateProductionRecord();
     const { data: farmers } = useFarmersList(country);
     const isEditing = !!editingItem;
+    const isPending = createMutation.isPending || updateMutation.isPending;
 
     useEffect(() => { if (open && formRef.current) formRef.current.reset(); }, [open, editingItem]);
 
@@ -29,7 +29,6 @@ export function ProductionFormDialog({ country, open, onOpenChange, editingItem 
         const data: Record<string, unknown> = {};
         form.forEach((val, key) => { data[key] = val; });
 
-        // Parse ALL numeric fields
         const numericFields = [
             'year', 'annual_cherry_kg', 'high_quality_cherry_kg',
             'a_cherry_estimation_kg', 'r_cherry_estimation_kg',
@@ -50,79 +49,156 @@ export function ProductionFormDialog({ country, open, onOpenChange, editingItem 
     };
 
     const currentYear = new Date().getFullYear();
+    const selectClasses = "flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none";
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{isEditing ? t('edit_record', 'Edit Record') : t('add_record', 'Add Record')}</DialogTitle>
                 </DialogHeader>
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
                     {/* Identity */}
-                    <div className="grid grid-cols-3 gap-3">
-                        <div className="space-y-1.5">
-                            <Label>Farmer *</Label>
-                            <select name="farmer" required defaultValue={(editingItem?.farmer as string) ?? ''} className="w-full rounded-lg border px-3 py-2 text-sm">
-                                <option value="">Select farmer...</option>
-                                {farmers?.map((f) => <option key={f.id} value={f.id}>{f.full_name}</option>)}
-                            </select>
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('identity', 'Identity')}</h3>
                         </div>
-                        <div className="space-y-1.5">
-                            <Label>Year *</Label>
-                            <Input name="year" type="number" required min="2020" max="2100" defaultValue={(editingItem?.year as number) ?? currentYear} className="rounded-lg" />
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('farmer_name')} *</span>
+                                <select name="farmer" required defaultValue={(editingItem?.farmer as string) ?? ''} className={selectClasses}>
+                                    <option value="">{t('select_farmer', 'Select farmer...')}</option>
+                                    {farmers?.map((f) => <option key={f.id} value={f.id}>{f.full_name}</option>)}
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('ghg_year')} *</span>
+                                <Input name="year" type="number" required min="2020" max="2100" defaultValue={(editingItem?.year as number) ?? currentYear} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('season')}</span>
+                                <select name="season" defaultValue={(editingItem?.season as string) ?? 'main'} className={selectClasses}>
+                                    <option value="main">Main</option><option value="mid">Mid</option><option value="fly">Fly</option>
+                                </select>
+                            </div>
                         </div>
-                        <div className="space-y-1.5">
-                            <Label>Season</Label>
-                            <select name="season" defaultValue={(editingItem?.season as string) ?? 'main'} className="w-full rounded-lg border px-3 py-2 text-sm">
-                                <option value="main">Main</option><option value="mid">Mid</option><option value="fly">Fly</option>
-                            </select>
+                    </div>
+
+                    {/* Production */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('production', 'Production')}</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Annual Cherry (kg)</span>
+                                <Input name="annual_cherry_kg" type="number" step="0.1" defaultValue={(editingItem?.annual_cherry_kg as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">High Quality Cherry (kg)</span>
+                                <Input name="high_quality_cherry_kg" type="number" step="0.1" defaultValue={(editingItem?.high_quality_cherry_kg as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Arabica Estimation (kg)</span>
+                                <Input name="a_cherry_estimation_kg" type="number" step="0.1" defaultValue={(editingItem?.a_cherry_estimation_kg as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Robusta Estimation (kg)</span>
+                                <Input name="r_cherry_estimation_kg" type="number" step="0.1" defaultValue={(editingItem?.r_cherry_estimation_kg as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
                         </div>
                     </div>
 
-                    {/* ─── Production ─── */}
-                    <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">🌿 Production</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5"><Label>Annual Cherry (kg)</Label><Input name="annual_cherry_kg" type="number" step="0.1" defaultValue={(editingItem?.annual_cherry_kg as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>High Quality Cherry (kg)</Label><Input name="high_quality_cherry_kg" type="number" step="0.1" defaultValue={(editingItem?.high_quality_cherry_kg as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Arabica Estimation (kg)</Label><Input name="a_cherry_estimation_kg" type="number" step="0.1" defaultValue={(editingItem?.a_cherry_estimation_kg as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Robusta Estimation (kg)</Label><Input name="r_cherry_estimation_kg" type="number" step="0.1" defaultValue={(editingItem?.r_cherry_estimation_kg as number) ?? ''} className="rounded-lg" /></div>
+                    {/* Revenue */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Revenue</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Total Coffee Income</span>
+                                <Input name="total_coffee_income" type="number" defaultValue={(editingItem?.total_coffee_income as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Total Household Income</span>
+                                <Input name="total_household_income" type="number" defaultValue={(editingItem?.total_household_income as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                        </div>
                     </div>
 
-                    {/* ─── Revenue ─── */}
-                    <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">💰 Revenue</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5"><Label>Total Coffee Income</Label><Input name="total_coffee_income" type="number" defaultValue={(editingItem?.total_coffee_income as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Total Household Income</Label><Input name="total_household_income" type="number" defaultValue={(editingItem?.total_household_income as number) ?? ''} className="rounded-lg" /></div>
+                    {/* Production Costs */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Production Costs</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Total Production Cost</span>
+                                <Input name="total_production_cost" type="number" defaultValue={(editingItem?.total_production_cost as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Fertilizer Cost</span>
+                                <Input name="fertilizer_cost" type="number" defaultValue={(editingItem?.fertilizer_cost as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Pesticide Cost</span>
+                                <Input name="pesticide_cost" type="number" defaultValue={(editingItem?.pesticide_cost as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Fuel Cost</span>
+                                <Input name="fuel_cost" type="number" defaultValue={(editingItem?.fuel_cost as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Hired Labor Cost</span>
+                                <Input name="hired_labor_cost" type="number" defaultValue={(editingItem?.hired_labor_cost as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Other Costs</span>
+                                <Input name="other_costs" type="number" defaultValue={(editingItem?.other_costs as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                        </div>
                     </div>
 
-                    {/* ─── Production Costs ─── */}
-                    <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">📊 Production Costs</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5"><Label>Total Production Cost</Label><Input name="total_production_cost" type="number" defaultValue={(editingItem?.total_production_cost as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Fertilizer Cost</Label><Input name="fertilizer_cost" type="number" defaultValue={(editingItem?.fertilizer_cost as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Pesticide Cost</Label><Input name="pesticide_cost" type="number" defaultValue={(editingItem?.pesticide_cost as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Fuel Cost</Label><Input name="fuel_cost" type="number" defaultValue={(editingItem?.fuel_cost as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Hired Labor Cost</Label><Input name="hired_labor_cost" type="number" defaultValue={(editingItem?.hired_labor_cost as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Other Costs</Label><Input name="other_costs" type="number" defaultValue={(editingItem?.other_costs as number) ?? ''} className="rounded-lg" /></div>
+                    {/* Financial Status */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Financial Status</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Current Debt</span>
+                                <Input name="current_debt" type="number" defaultValue={(editingItem?.current_debt as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Remaining Cash</span>
+                                <Input name="remaining_cash" type="number" defaultValue={(editingItem?.remaining_cash as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                        </div>
                     </div>
 
-                    {/* ─── Financial Status ─── */}
-                    <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">🏦 Financial Status</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5"><Label>Current Debt</Label><Input name="current_debt" type="number" defaultValue={(editingItem?.current_debt as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Remaining Cash</Label><Input name="remaining_cash" type="number" defaultValue={(editingItem?.remaining_cash as number) ?? ''} className="rounded-lg" /></div>
+                    {/* Shade Trees & Notes */}
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-primary-700 px-4 py-2">
+                            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Shade Trees & Notes</h3>
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Trees Planted</span>
+                                <Input name="shade_trees_planted" type="number" defaultValue={(editingItem?.shade_trees_planted as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">Trees Survived</span>
+                                <Input name="shade_trees_survived" type="number" defaultValue={(editingItem?.shade_trees_survived as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                            <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('notes')}</span>
+                                <Input name="notes" defaultValue={(editingItem?.notes as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+                            </div>
+                        </div>
                     </div>
 
-                    {/* ─── Shade Trees ─── */}
-                    <h4 className="text-sm font-semibold text-gray-700 border-b pb-1">🌳 Shade Trees</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5"><Label>Trees Planted</Label><Input name="shade_trees_planted" type="number" defaultValue={(editingItem?.shade_trees_planted as number) ?? ''} className="rounded-lg" /></div>
-                        <div className="space-y-1.5"><Label>Trees Survived</Label><Input name="shade_trees_survived" type="number" defaultValue={(editingItem?.shade_trees_survived as number) ?? ''} className="rounded-lg" /></div>
-                    </div>
-
-                    <div className="space-y-1.5"><Label>Notes</Label><Input name="notes" defaultValue={(editingItem?.notes as string) ?? ''} className="rounded-lg" /></div>
-
-                    <Button type="submit" className="w-full btn-3d-primary text-white rounded-lg" disabled={createMutation.isPending || updateMutation.isPending}>
+                    {/* Submit */}
+                    <Button type="submit" className="w-full btn-3d-primary text-white rounded-lg" disabled={isPending}>
                         {isEditing ? t('save_changes', 'Save Changes') : t('add_record', 'Add Record')}
                     </Button>
                 </form>

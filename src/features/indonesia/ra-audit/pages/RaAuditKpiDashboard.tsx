@@ -88,21 +88,11 @@ export default function RaAuditKpiDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <button className="text-left" onClick={() => navigate(ROUTES.ID_RA_FARMERS)}>
-          <KpiCard title={t('farmers_inspected', 'Farmers Inspected')} value={farmerCount} icon={Users} color="text-green-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.ID_RA_FARMS)}>
-          <KpiCard title={t('farms_inspected', 'Farms Inspected')} value={farmCount} icon={TreePine} color="text-emerald-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.ID_RA_SPECIES)}>
-          <KpiCard title={t('species_recorded', 'Species Recorded')} value={speciesCount} icon={TreePine} color="text-teal-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.ID_RA_CERTIFICATES)}>
-          <KpiCard title={t('certificates', 'Certificates')} value={certCount} icon={FileCheck} color="text-blue-600" />
-        </button>
-        <div>
-          <KpiCard title={t('total_area_ha', 'Total Area (ha)')} value={totalArea.toFixed(1)} icon={ClipboardCheck} color="text-purple-600" />
-        </div>
+        <KpiCard title={t('farmers_inspected', 'Farmers Inspected')} value={farmerCount} icon={Users} color="text-green-600" onClick={() => navigate(ROUTES.ID_RA_FARMERS)} />
+        <KpiCard title={t('farms_inspected', 'Farms Inspected')} value={farmCount} icon={TreePine} color="text-emerald-600" onClick={() => navigate(ROUTES.ID_RA_FARMS)} />
+        <KpiCard title={t('species_recorded', 'Species Recorded')} value={speciesCount} icon={TreePine} color="text-teal-600" onClick={() => navigate(ROUTES.ID_RA_SPECIES)} />
+        <KpiCard title={t('certificates', 'Certificates')} value={certCount} icon={FileCheck} color="text-blue-600" onClick={() => navigate(ROUTES.ID_RA_CERTIFICATES)} />
+        <KpiCard title={t('total_area_ha', 'Total Area (ha)')} value={totalArea.toFixed(1)} icon={ClipboardCheck} color="text-purple-600" onClick={() => navigate(ROUTES.ID_RA_FARMS)} />
       </div>
 
       {/* Charts */}

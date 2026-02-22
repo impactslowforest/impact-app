@@ -2,7 +2,7 @@ import PbCollectionTable, { type ColumnDef } from '@/components/shared/PbCollect
 
 const columns: ColumnDef[] = [
   { key: 'family_id', label: 'Family ID' },
-  { key: 'farm_id_text', label: 'Farm' },
+  { key: 'farm_name', label: 'Farm', field: 'slow_farm.name' },
   { key: 'worker1_name_en', label: 'Parent 1' },
   { key: 'relation1', label: 'Relation' },
   { key: 'worker2_name_en', label: 'Parent 2' },
@@ -16,6 +16,7 @@ export default function DcFamilyList() {
       title="Daycare Families"
       collection="dc_families"
       columns={columns}
+      expand="slow_farm"
     />
   );
 }

@@ -45,6 +45,9 @@ export function AppSidebar() {
   const { user, hasPermission, hasRole } = useAuth();
   useTheme(); // apply theme side-effects
   const shortcuts = useUIStore((s) => s.shortcuts);
+  const countryShortcuts = useUIStore((s) => s.countryShortcuts);
+  const activeCountry = useUIStore((s) => s.activeCountry);
+  const setActiveCountry = useUIStore((s) => s.setActiveCountry);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const [openSubmenus, setOpenSubmenus] = useState<Set<string>>(new Set());
 
@@ -227,15 +230,18 @@ export function AppSidebar() {
         { key: 'coffee_price', label: t('coffee_raw_material_price', 'Coffee price'), icon: Coffee, path: ROUTES.LA_COFFEE_PRICE },
         { key: 'cocoa_price', label: t('cacao_raw_material_price', 'Cocoa price'), icon: Bean, path: ROUTES.ID_CACAO_PRICE },
       ] as (NavItem & { key: string })[]).filter((item) => {
-        const uc = user?.country;
-        // Indonesia: no daycare, slow_farm, coffee_price (uses cocoa)
+        // Use activeCountry for global users when a country is selected
+        const uc = (user?.country === 'global' && activeCountry !== 'all') ? activeCountry : user?.country;
+        // Country-specific exclusions
         if (uc === 'indonesia' && ['daycare', 'slow_farm', 'coffee_price'].includes(item.key)) return false;
-        // Vietnam: no daycare, slow_farm, cocoa_price
         if (uc === 'vietnam' && ['daycare', 'slow_farm', 'cocoa_price'].includes(item.key)) return false;
-        // Laos: no cocoa_price
         if (uc === 'laos' && item.key === 'cocoa_price') return false;
-        // Global: show all
-        return shortcuts.includes(item.key);
+        // Per-country shortcuts
+        const effectiveKey = user?.country === 'global'
+          ? (activeCountry !== 'all' ? activeCountry : 'all')
+          : (user?.country || 'all');
+        const effectiveShortcuts = countryShortcuts[effectiveKey] || shortcuts;
+        return effectiveShortcuts.includes(item.key);
       }),
     },
   ];
@@ -419,6 +425,10 @@ export function AppSidebar() {
     if (section.country && user?.country !== 'global' && user?.country !== section.country) {
       return false;
     }
+    // Global users with active country filter — hide non-matching country sections
+    if (section.country && user?.country === 'global' && activeCountry !== 'all' && section.country !== activeCountry) {
+      return false;
+    }
     if (section.permission && !hasPermission(section.permission)) {
       return false;
     }
@@ -456,6 +466,7 @@ export function AppSidebar() {
           type="button"
           onClick={() => {
             navigate(ROUTES.DASHBOARD);
+            setActiveCountry('all');
             setOpenSections(new Set());
             setOpenSubmenus(new Set());
           }}
@@ -473,6 +484,51 @@ export function AppSidebar() {
             </span>
           )}
         </button>
+        {/* Country selector — Global users only */}
+        {user?.country === 'global' && (
+          <div className="flex justify-center gap-1.5 pb-3 px-3 group-data-[collapsible=icon]:hidden">
+            {([
+              { code: 'vietnam' as const, iso: 'vn', label: 'Vietnam' },
+              { code: 'laos' as const, iso: 'la', label: 'Laos' },
+              { code: 'indonesia' as const, iso: 'id', label: 'Indonesia' },
+            ]).map(btn => {
+              const isActive = activeCountry === btn.code;
+              return (
+                <button
+                  key={btn.code}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const next = isActive ? 'all' : btn.code;
+                    setActiveCountry(next);
+                    // If user is on a country-specific page that doesn't match, redirect to dashboard
+                    const countryPrefixes = ['/laos/', '/indonesia/', '/vietnam/'];
+                    const currentPath = location.pathname;
+                    const isOnCountryPage = countryPrefixes.some(p => currentPath.startsWith(p));
+                    if (isOnCountryPage && next !== 'all') {
+                      const matchesNewCountry = currentPath.startsWith(`/${next}/`);
+                      if (!matchesNewCountry) {
+                        navigate(ROUTES.DASHBOARD);
+                      }
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                    isActive
+                      ? 'bg-primary-100 ring-2 ring-primary-500 text-primary-800 shadow-sm scale-105'
+                      : 'bg-white/60 text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-sm'
+                  }`}
+                  title={btn.label}
+                >
+                  <img
+                    src={`https://flagcdn.com/w40/${btn.iso}.png`}
+                    alt={btn.label}
+                    className="h-4 w-6 rounded-[2px] object-cover shadow-sm"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
       </SidebarHeader>
 
       <SidebarContent className="glass-panel overflow-y-auto border-none">

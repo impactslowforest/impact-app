@@ -2,7 +2,7 @@ import PbCollectionTable, { type ColumnDef } from '@/components/shared/PbCollect
 
 const columns: ColumnDef[] = [
   { key: 'menu_detail_id', label: 'ID' },
-  { key: 'farm_id_text', label: 'Farm' },
+  { key: 'farm_name', label: 'Farm', field: 'slow_farm.name' },
   { key: 'staff_id', label: 'Staff' },
   { key: 'daily_menu_id', label: 'Menu' },
   { key: 'material_name', label: 'Material' },
@@ -19,6 +19,7 @@ export default function DcMenuDetailList() {
       title="Menu Details"
       collection="dc_menu_details"
       columns={columns}
+      expand="slow_farm"
     />
   );
 }

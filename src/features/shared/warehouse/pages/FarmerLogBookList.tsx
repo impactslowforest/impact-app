@@ -4,7 +4,7 @@ import PbCollectionTable, { type ColumnDef, type FilterDef } from '@/components/
 const columns: ColumnDef[] = [
   { key: 'log_code', label: 'Log Code' },
   { key: 'village_code', label: 'Village Code' },
-  { key: 'farmer_name', label: 'Farmer' },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name' },
   { key: 'variety', label: 'Variety' },
   { key: 'process', label: 'Process' },
   { key: 'eu_organic_kg', label: 'EU Organic (kg)' },
@@ -29,7 +29,7 @@ const seasonOpts = [
 ];
 
 const filters: FilterDef[] = [
-  { key: 'farmer', label: 'Farmer', type: 'text', field: 'farmer_name' },
+  { key: 'farmer', label: 'Farmer', type: 'text', field: 'farmer.full_name' },
   { key: 'village', label: 'Village', type: 'text', field: 'village_code' },
   { key: 'date', label: 'Log Date', type: 'date_range', field: 'log_date' },
   { key: 'season', label: 'Season', type: 'select', field: 'season', options: seasonOpts },
@@ -48,6 +48,7 @@ export default function FarmerLogBookList({ country }: Props) {
       columns={columns}
       filterDefs={filters}
       baseFilter={baseFilter}
+      expand="farmer"
     />
   );
 }

@@ -345,7 +345,7 @@ export default function InboundRequestCreateDialog({
         setLookupResult({
           farmId: farm ? String(farm.id || '') : String(detail.farm || ''),
           farmCode: farm ? String(farm.farm_code || '') : '',
-          farmName: String(detail.farm_name || (farm ? farm.farm_name : '') || ''),
+          farmName: farm ? String(farm.farm_name || '') : '',
           farmerId: farmer ? String(farmer.id || '') : String(detail.farmer || ''),
           farmerCode: farmer ? String(farmer.farmer_code || '') : '',
           farmerName: farmer ? String(farmer.full_name || '') : '',
@@ -430,32 +430,23 @@ export default function InboundRequestCreateDialog({
       // COOPERATIVE: MUST have farm/farmer from lookup
       if (source === 'Cooperative' && lookupResult) {
         payload.farm = lookupResult.farmId;
-        payload.farm_code = lookupResult.farmCode;
         payload.farmer = lookupResult.farmerId;
-        payload.farmer_code = lookupResult.farmerCode;
-        payload.farmer_name = lookupResult.farmerName;
         payload.village_code = lookupResult.villageCode;
-        payload.village_name = lookupResult.villageName;
       }
 
-      // SLOW FARM: Add company name, optionally add farm/farmer if lookup succeeded
+      // SLOW FARM: Optionally add farm/farmer if lookup succeeded
       if (source === 'Slow farm') {
-        payload.company_name = 'Forest Plateau Lao Co., Ltd';
         // Add farm/farmer only if lookup succeeded
         if (lookupResult && lookupResult.farmId) {
           payload.farm = lookupResult.farmId;
-          payload.farm_code = lookupResult.farmCode;
           payload.farmer = lookupResult.farmerId;
-          payload.farmer_code = lookupResult.farmerCode;
-          payload.farmer_name = lookupResult.farmerName;
           payload.village_code = lookupResult.villageCode;
-          payload.village_name = lookupResult.villageName;
         }
       }
 
-      // THIRD PARTY: Only company name, NO farm/farmer needed
+      // THIRD PARTY: NO farm/farmer needed (company name from supplier relation)
       if (source === 'Third party') {
-        payload.company_name = companyName;
+        // company_name removed; available via supplier relation expand
       }
 
       // Debug logging

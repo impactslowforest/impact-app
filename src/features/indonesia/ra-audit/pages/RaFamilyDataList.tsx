@@ -2,7 +2,8 @@ import PbCollectionTable, { type ColumnDef } from '@/components/shared/PbCollect
 
 const columns: ColumnDef[] = [
   { key: 'position_id', label: 'Position ID' },
-  { key: 'farmer_id_text', label: 'Farmer ID' },
+  { key: 'farmer_id_text', label: 'Farmer Code' },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name' },
   { key: 'member_name', label: 'Member Name' },
   { key: 'family_position', label: 'Family Position' },
   { key: 'birth_year', label: 'Birth Year' },
@@ -17,6 +18,7 @@ export default function RaFamilyDataList() {
       title="RA Family Data"
       collection="ra_family_data"
       columns={columns}
+      expand="farmer"
     />
   );
 }

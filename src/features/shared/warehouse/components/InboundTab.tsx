@@ -29,8 +29,8 @@ const requestColumns: ColumnDef[] = [
     { value: 'QR code', label: 'QR code' },
     { value: 'Manual', label: 'Manual' },
   ]},
-  { key: 'farmer_name', label: 'Farmer', readonly: true },
-  { key: 'village_name', label: 'Village', readonly: true },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name', readonly: true },
+  { key: 'village_name', label: 'Village', field: 'farm.village', readonly: true },
   { key: 'request_date', label: 'Request Date', render: (v) => v ? String(v).split(' ')[0] : '', inputType: 'date' },
   { key: 'variety', label: 'Variety' },
   { key: 'process', label: 'Process', inputType: 'select', selectOptions: [
@@ -139,7 +139,7 @@ export function InboundTab({ country }: InboundTabProps) {
     setDrill({
       level: 'inbound_detail',
       requestId: id,
-      requestCode: String(record.inbound_code || record.farmer_name || id),
+      requestCode: String(record.inbound_code || id),
     });
   };
 
@@ -221,8 +221,8 @@ export function InboundTab({ country }: InboundTabProps) {
 
   // Filter definitions per level
   const requestFilters: FilterDef[] = [
-    { key: 'farmer', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer_name' },
-    { key: 'village', label: t('village', 'Village'), type: 'text', field: 'village_name' },
+    { key: 'farmer', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer.full_name' },
+    { key: 'village', label: t('village', 'Village'), type: 'text', field: 'farm.village' },
     { key: 'date', label: t('request_date', 'Request Date'), type: 'date_range', field: 'request_date' },
     { key: 'season', label: t('season', 'Season'), type: 'select', field: 'season', options: seasonOptions },
     { key: 'status', label: t('status', 'Status'), type: 'select', field: 'status', options: [
@@ -254,6 +254,7 @@ export function InboundTab({ country }: InboundTabProps) {
   let currentCollection = 'inbound_requests';
   let currentColumns = requestColumns;
   let currentFilterDefs: FilterDef[] = requestFilters;
+  let currentExpand: string | undefined = 'farmer,farm';
   let onRowClick: ((id: string, record: Record<string, unknown>) => void) | undefined = handleSelectRequest;
 
   if (drill.level === 'inbound_detail') {
@@ -261,6 +262,7 @@ export function InboundTab({ country }: InboundTabProps) {
     currentColumns = detailColumns;
     currentTitle = t('inbound_details', 'Inbound Details');
     currentFilterDefs = detailFilters;
+    currentExpand = undefined;
     onRowClick = handleSelectDetail;
     if (drill.requestId) {
       const parentFilter = `inbound_request = "${drill.requestId}"`;
@@ -271,6 +273,7 @@ export function InboundTab({ country }: InboundTabProps) {
     currentColumns = checkColumns;
     currentTitle = t('inbound_checks', 'Inbound Checks');
     currentFilterDefs = checkFilters;
+    currentExpand = undefined;
     onRowClick = undefined;
     if (drill.detailId) {
       const detailFilter = `inbound_detail = "${drill.detailId}"`;
@@ -338,6 +341,7 @@ export function InboundTab({ country }: InboundTabProps) {
         columns={currentColumns}
         baseFilter={currentFilter}
         sort="-created"
+        expand={currentExpand}
         onRowClick={onRowClick}
         filterDefs={currentFilterDefs}
         showBack={false}

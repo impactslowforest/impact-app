@@ -11,21 +11,26 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background-color: #10b981;
-    /* Default green theme */
+    background: linear-gradient(135deg, #1C873A 0%, #165728 100%);
     color: white;
-    border: none;
+    border: 2px solid rgba(255, 255, 255, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow:
+        0 4px 16px rgba(22, 87, 40, 0.35),
+        0 2px 6px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .ai-chat-fab:hover {
     transform: scale(1.1);
-    background-color: #059669;
+    box-shadow:
+        0 6px 24px rgba(22, 87, 40, 0.45),
+        0 3px 8px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .ai-chat-logo {
@@ -33,6 +38,7 @@
     height: 32px;
     object-fit: contain;
     border-radius: 50%;
+    filter: brightness(0) invert(1);
 }
 
 .ai-chat-panel {
@@ -44,12 +50,14 @@
     height: 500px;
     max-height: calc(100vh - 120px);
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    box-shadow:
+        0 12px 48px rgba(22, 87, 40, 0.15),
+        0 4px 16px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid #e5e7eb;
+    border: 1px solid rgba(28, 135, 58, 0.12);
     animation: slideUp 0.3s ease-out;
 }
 
@@ -67,7 +75,7 @@
 
 .ai-chat-header {
     padding: 16px;
-    background-color: #10b981;
+    background: linear-gradient(135deg, #1C873A 0%, #165728 100%);
     color: white;
     font-weight: 600;
     display: flex;
@@ -96,7 +104,7 @@
 
 .ai-chat-message.user {
     align-self: flex-end;
-    background-color: #10b981;
+    background-color: #1C873A;
     color: white;
     border-bottom-right-radius: 2px;
 }
@@ -127,12 +135,12 @@
 }
 
 .ai-chat-input:focus {
-    border-color: #10b981;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    border-color: #1C873A;
+    box-shadow: 0 0 0 2px rgba(28, 135, 58, 0.2);
 }
 
 .ai-chat-send-btn {
-    background-color: #10b981;
+    background-color: #1C873A;
     color: white;
     border: none;
     padding: 8px;

@@ -5,7 +5,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -294,118 +293,93 @@ export function FarmerFormDialog({
 
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
           {country === 'laos' && (
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-gray-700">{t('cooperative')}</Label>
-              <Select
-                name="cooperative"
-                defaultValue={(editingItem?.cooperative as string) || preselectedCooperative || '__none__'}
-              >
-                <SelectTrigger className="w-full rounded-lg">
-                  <SelectValue placeholder={t('select_cooperative')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">{t('none')}</SelectItem>
-                  {cooperatives?.map((coop) => (
-                    <SelectItem key={coop.id} value={coop.id}>
-                      {coop.name} ({coop.coop_code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              <div className="bg-primary-700 px-4 py-2">
+                <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('cooperative')}</h3>
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('cooperative')}</span>
+                <Select
+                  name="cooperative"
+                  defaultValue={(editingItem?.cooperative as string) || preselectedCooperative || '__none__'}
+                >
+                  <SelectTrigger className="flex-1 rounded-lg">
+                    <SelectValue placeholder={t('select_cooperative')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">{t('none')}</SelectItem>
+                    {cooperatives?.map((coop) => (
+                      <SelectItem key={coop.id} value={coop.id}>
+                        {coop.name} ({coop.coop_code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
 
           {FARMER_FIELD_GROUPS.map((group) => (
-            <fieldset key={group.title} className="space-y-3">
-              <legend className="text-sm font-semibold text-primary-800 border-b border-primary-100 pb-1 mb-2 w-full">
-                {group.title}
-              </legend>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {group.fields.map((field) => {
+            <div key={group.title} className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              <div className="bg-primary-700 px-4 py-2">
+                <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{group.title}</h3>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {group.fields.map((field, idx) => {
                   const isReadonly = isEditing && field.readonlyOnEdit;
-                  const span = field.colSpan === 2 ? 'sm:col-span-2' : '';
+                  const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50';
 
                   if (field.type === 'boolean') {
                     return (
-                      <div key={field.name} className={`flex items-center gap-2 ${span}`}>
-                        <input
-                          type="checkbox"
-                          id={`farmer-${field.name}`}
-                          name={field.name}
-                          defaultChecked={boolVal(field.name)}
-                          className="h-4 w-4 rounded border-gray-300"
-                          disabled={isReadonly}
-                        />
-                        <Label htmlFor={`farmer-${field.name}`} className="text-xs cursor-pointer">{field.label}</Label>
+                      <div key={field.name} className={`flex items-center gap-4 px-4 py-3 ${rowBg}`}>
+                        <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{field.label}</span>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" id={`farmer-${field.name}`} name={field.name} defaultChecked={boolVal(field.name)} className="h-4 w-4 rounded border-gray-300 text-primary-600" disabled={isReadonly} />
+                          <span className="text-sm text-gray-600">{boolVal(field.name) ? 'Yes' : 'No'}</span>
+                        </label>
                       </div>
                     );
                   }
 
                   if (field.type === 'select' && field.options) {
                     return (
-                      <div key={field.name} className={`space-y-1.5 ${span}`}>
-                        <Label className="text-xs font-medium text-gray-700">
-                          {field.label}{field.required ? ' *' : ''}
-                        </Label>
-                        <select
-                          name={field.name}
-                          defaultValue={String(val(field.name) || field.options[0]?.value || '')}
-                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-50"
-                          disabled={isReadonly}
-                          required={field.required}
-                        >
-                          {field.options.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
+                      <div key={field.name} className={`flex items-center gap-4 px-4 py-3 ${rowBg}`}>
+                        <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{field.label}{field.required ? ' *' : ''}</span>
+                        <select name={field.name} defaultValue={String(val(field.name) || field.options[0]?.value || '')}
+                          className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:opacity-50 focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none" disabled={isReadonly} required={field.required}>
+                          {field.options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                         </select>
                       </div>
                     );
                   }
 
                   return (
-                    <div key={field.name} className={`space-y-1.5 ${span}`}>
-                      <Label className="text-xs font-medium text-gray-700">
-                        {field.label}{field.required ? ' *' : ''}
-                      </Label>
-                      <Input
-                        name={field.name}
-                        type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
-                        step={field.step}
-                        min={field.type === 'number' ? 0 : undefined}
-                        required={field.required}
-                        defaultValue={val(field.name)}
-                        readOnly={isReadonly}
-                        tabIndex={isReadonly ? -1 : undefined}
-                        className={`rounded-lg text-sm ${isReadonly ? 'bg-gray-50 text-gray-500' : ''}`}
-                      />
+                    <div key={field.name} className={`flex items-center gap-4 px-4 py-3 ${rowBg}`}>
+                      <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{field.label}{field.required ? ' *' : ''}</span>
+                      <Input name={field.name} type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'} step={field.step} min={field.type === 'number' ? 0 : undefined} required={field.required} defaultValue={val(field.name)} readOnly={isReadonly} tabIndex={isReadonly ? -1 : undefined}
+                        className={`flex-1 rounded-lg text-sm ${isReadonly ? 'bg-gray-100 text-gray-500' : 'bg-white'}`} />
                     </div>
                   );
                 })}
               </div>
-            </fieldset>
+            </div>
           ))}
 
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-semibold text-primary-800 border-b border-primary-100 pb-1 mb-2 w-full">
-              Advanced Data (JSON)
-            </legend>
-            <div className="grid grid-cols-1 gap-3">
-              {JSON_FIELDS.map((jf) => (
-                <div key={jf} className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700">
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="bg-primary-700 px-4 py-2">
+              <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">Advanced Data (JSON)</h3>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {JSON_FIELDS.map((jf, idx) => (
+                <div key={jf} className={`flex items-start gap-4 px-4 py-3 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                  <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0 pt-2">
                     {jf.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                  </Label>
-                  <textarea
-                    name={`__json_${jf}`}
-                    defaultValue={jsonVal(jf)}
-                    rows={2}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs font-mono resize-y"
-                    placeholder="{}"
-                  />
+                  </span>
+                  <textarea name={`__json_${jf}`} defaultValue={jsonVal(jf)} rows={2} className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-mono resize-y focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none" placeholder="{}" />
                 </div>
               ))}
             </div>
-          </fieldset>
+          </div>
 
           <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500 space-y-1">
             <p><strong>Data entry by:</strong> {pb.authStore.record?.name || pb.authStore.record?.email || user?.name || '—'}</p>

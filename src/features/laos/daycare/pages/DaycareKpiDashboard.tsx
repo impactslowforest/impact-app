@@ -78,21 +78,11 @@ export default function DaycareKpiDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <button className="text-left" onClick={() => navigate(ROUTES.LA_DC_KIDS)}>
-          <KpiCard title={t('total_kids', 'Total Kids')} value={kidsCount} icon={Baby} color="text-pink-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.LA_DC_FAMILIES)}>
-          <KpiCard title={t('families', 'Families')} value={familyCount} icon={Users} color="text-blue-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.LA_DC_ATTENDANCE)}>
-          <KpiCard title={t('attendance_records', 'Attendance Records')} value={attendanceCount.toLocaleString()} icon={ClipboardList} color="text-green-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.LA_DC_HEALTH)}>
-          <KpiCard title={t('health_checks', 'Health Checks')} value={healthChecks.length} icon={Heart} color="text-red-600" />
-        </button>
-        <button className="text-left" onClick={() => navigate(ROUTES.LA_DC_STUDIES)}>
-          <KpiCard title={t('study_records', 'Study Records')} value={studyCount.toLocaleString()} icon={UtensilsCrossed} color="text-purple-600" />
-        </button>
+        <KpiCard title={t('total_kids', 'Total Kids')} value={kidsCount} icon={Baby} color="text-pink-600" onClick={() => navigate(ROUTES.LA_DC_KIDS)} />
+        <KpiCard title={t('families', 'Families')} value={familyCount} icon={Users} color="text-blue-600" onClick={() => navigate(ROUTES.LA_DC_FAMILIES)} />
+        <KpiCard title={t('attendance_records', 'Attendance Records')} value={attendanceCount.toLocaleString()} icon={ClipboardList} color="text-green-600" onClick={() => navigate(ROUTES.LA_DC_ATTENDANCE)} />
+        <KpiCard title={t('health_checks', 'Health Checks')} value={healthChecks.length} icon={Heart} color="text-red-600" onClick={() => navigate(ROUTES.LA_DC_HEALTH)} />
+        <KpiCard title={t('study_records', 'Study Records')} value={studyCount.toLocaleString()} icon={UtensilsCrossed} color="text-purple-600" onClick={() => navigate(ROUTES.LA_DC_STUDIES)} />
       </div>
 
       {/* Charts */}

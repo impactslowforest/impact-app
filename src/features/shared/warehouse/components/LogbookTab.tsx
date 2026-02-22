@@ -17,7 +17,7 @@ const farmerLogColumns: ColumnDef[] = [
   { key: 'log_code', label: 'Log Code', readonly: true },
   { key: 'farmer', label: 'Farmer (ID)', readonly: true, hideInTable: true },
   { key: 'village_code', label: 'Village Code', readonly: true },
-  { key: 'farmer_name', label: 'Farmer', readonly: true },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name', readonly: true },
   { key: 'variety', label: 'Variety' },
   { key: 'process', label: 'Process' },
   { key: 'eu_organic_kg', label: 'EU Organic (kg)', readonly: true },
@@ -38,7 +38,7 @@ const farmLogColumns: ColumnDef[] = [
   { key: 'log_code', label: 'Log Code', readonly: true },
   { key: 'farm', label: 'Farm (ID)', readonly: true, hideInTable: true },
   { key: 'village_code', label: 'Village Code', readonly: true },
-  { key: 'farm_name', label: 'Farm', readonly: true },
+  { key: 'farm_name', label: 'Farm', field: 'farm.farm_name', readonly: true },
   { key: 'certificate', label: 'Certificate' },
   { key: 'variety', label: 'Variety' },
   { key: 'process', label: 'Process' },
@@ -58,7 +58,7 @@ const logDetailColumns: ColumnDef[] = [
   { key: 'lot_code', label: 'Lot Code', readonly: true },
   { key: 'farm_log_book', label: 'Farm Log Book (ID)', readonly: true, hideInTable: true },
   { key: 'village_code', label: 'Village Code', readonly: true },
-  { key: 'farm_name', label: 'Farm', readonly: true },
+  { key: 'farm_name', label: 'Farm', field: 'farm.farm_name', readonly: true },
   { key: 'certificate', label: 'Certificate' },
   { key: 'variety', label: 'Variety' },
   { key: 'process', label: 'Process' },
@@ -79,9 +79,9 @@ const harvestingColumns: ColumnDef[] = [
   { key: 'log_code', label: 'Log Code', readonly: true },
   { key: 'farm', label: 'Farm (ID)', readonly: true, hideInTable: true },
   { key: 'village_code', label: 'Village Code', readonly: true },
-  { key: 'village_name', label: 'Village', readonly: true },
-  { key: 'farmer_name', label: 'Farmer', readonly: true },
-  { key: 'farm_name', label: 'Farm', readonly: true },
+  { key: 'village_name', label: 'Village', field: 'farm.village', readonly: true },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name', readonly: true },
+  { key: 'farm_name', label: 'Farm', field: 'farm.farm_name', readonly: true },
   { key: 'variety', label: 'Variety' },
   { key: 'species', label: 'Species' },
   { key: 'picking_date', label: 'Picking Date', render: (v) => v ? String(v).split(' ')[0] : '', inputType: 'date' },
@@ -176,8 +176,8 @@ export function LogbookTab({ country }: LogbookTabProps) {
   // ─── Top-level: "All Harvesting Logs" view ───
   if (topView === 'harvesting_all') {
     const harvestAllFilters: FilterDef[] = [
-      { key: 'farmer', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer_name' },
-      { key: 'farm', label: t('farm', 'Farm'), type: 'text', field: 'farm_name' },
+      { key: 'farmer', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer.full_name' },
+      { key: 'farm', label: t('farm', 'Farm'), type: 'text', field: 'farm.farm_name' },
       { key: 'village', label: t('village', 'Village'), type: 'text', field: 'village_code' },
       { key: 'date', label: t('picking_date', 'Picking Date'), type: 'date_range', field: 'picking_date' },
       { key: 'season', label: t('season', 'Season'), type: 'select', field: 'season', options: seasonOptions },
@@ -216,6 +216,7 @@ export function LogbookTab({ country }: LogbookTabProps) {
           filterDefs={harvestAllFilters}
           showBack={false}
           defaultValues={{ country, picking_date: today, staff_input: currentUserName }}
+          expand="farmer,farm"
         />
       </div>
     );
@@ -228,7 +229,7 @@ export function LogbookTab({ country }: LogbookTabProps) {
     setDrill({
       level: 'farm_logbook',
       farmerLogId: id,
-      farmerLogCode: String(record.log_code || record.farmer_name || id),
+      farmerLogCode: String(record.log_code || id),
       farmerId: String(record.farmer || ''),
     });
   };
@@ -238,7 +239,7 @@ export function LogbookTab({ country }: LogbookTabProps) {
       ...prev,
       level: 'farm_detail',
       farmLogId: id,
-      farmLogCode: String(record.log_code || record.farm_name || id),
+      farmLogCode: String(record.log_code || id),
       farmId: String(record.farm || ''),
     }));
     setDetailView('log_detail');
@@ -285,28 +286,28 @@ export function LogbookTab({ country }: LogbookTabProps) {
 
   // Filter definitions per level
   const farmerLogFilters: FilterDef[] = [
-    { key: 'farmer', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer_name' },
+    { key: 'farmer', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer.full_name' },
     { key: 'village', label: t('village', 'Village'), type: 'text', field: 'village_code' },
     { key: 'date', label: t('log_date', 'Log Date'), type: 'date_range', field: 'log_date' },
     { key: 'season', label: t('season', 'Season'), type: 'select', field: 'season', options: seasonOptions },
   ];
 
   const farmLogFilters: FilterDef[] = [
-    { key: 'farm', label: t('farm', 'Farm'), type: 'text', field: 'farm_name' },
+    { key: 'farm', label: t('farm', 'Farm'), type: 'text', field: 'farm.farm_name' },
     { key: 'village', label: t('village', 'Village'), type: 'text', field: 'village_code' },
     { key: 'date', label: t('log_date', 'Log Date'), type: 'date_range', field: 'log_date' },
     { key: 'season', label: t('season', 'Season'), type: 'select', field: 'season', options: seasonOptions },
   ];
 
   const logDetailFilters: FilterDef[] = [
-    { key: 'farm', label: t('farm', 'Farm'), type: 'text', field: 'farm_name' },
+    { key: 'farm', label: t('farm', 'Farm'), type: 'text', field: 'farm.farm_name' },
     { key: 'date', label: t('log_date', 'Log Date'), type: 'date_range', field: 'log_date' },
     { key: 'season', label: t('season', 'Season'), type: 'select', field: 'season', options: seasonOptions },
   ];
 
   const harvestingFilters: FilterDef[] = [
-    { key: 'farmer', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer_name' },
-    { key: 'farm', label: t('farm', 'Farm'), type: 'text', field: 'farm_name' },
+    { key: 'farmer', label: t('farmer', 'Farmer'), type: 'text', field: 'farmer.full_name' },
+    { key: 'farm', label: t('farm', 'Farm'), type: 'text', field: 'farm.farm_name' },
     { key: 'date', label: t('picking_date', 'Picking Date'), type: 'date_range', field: 'picking_date' },
     { key: 'season', label: t('season', 'Season'), type: 'select', field: 'season', options: seasonOptions },
   ];
@@ -318,6 +319,7 @@ export function LogbookTab({ country }: LogbookTabProps) {
   let currentColumns = farmerLogColumns;
   let currentFilterDefs: FilterDef[] = farmerLogFilters;
   let onRowClick: ((id: string, record: Record<string, unknown>) => void) | undefined = handleSelectFarmerLog;
+  let currentExpand: string | undefined = 'farmer';
 
   if (drill.level === 'farm_logbook') {
     currentCollection = 'farm_log_books';
@@ -325,6 +327,7 @@ export function LogbookTab({ country }: LogbookTabProps) {
     currentTitle = t('farm_log_books', 'Farm Logbooks');
     currentFilterDefs = farmLogFilters;
     onRowClick = handleSelectFarmLog;
+    currentExpand = 'farm';
 
     // Filter by parent relation OR farmer relation (handles imported data without parent FK)
     if (drill.farmerLogId) {
@@ -340,6 +343,7 @@ export function LogbookTab({ country }: LogbookTabProps) {
       currentTitle = t('log_book_details', 'Log Book Details');
       currentFilterDefs = logDetailFilters;
       onRowClick = undefined;
+      currentExpand = 'farm';
 
       // Filter by farm_log_book OR farm (handles imported data without parent FK)
       if (drill.farmLogId) {
@@ -354,6 +358,7 @@ export function LogbookTab({ country }: LogbookTabProps) {
       currentTitle = t('harvesting_logs', 'Harvesting Logs');
       currentFilterDefs = harvestingFilters;
       onRowClick = undefined;
+      currentExpand = 'farmer,farm';
 
       // Harvesting logs: use farm relation (more reliable for imported data
       // since farm_log_book relation was added later in migration 026)
@@ -469,6 +474,7 @@ export function LogbookTab({ country }: LogbookTabProps) {
         showBack={false}
         defaultValues={currentDefaults}
         readonlyDisplay={readonlyDisplay}
+        expand={currentExpand}
       />
     </div>
   );

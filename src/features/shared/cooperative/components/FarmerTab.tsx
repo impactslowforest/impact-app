@@ -324,14 +324,14 @@ export function FarmerTab({
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-gray-200 hover:bg-transparent">
-                    <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">Code</TableHead>
-                    <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">{t('full_name')}</TableHead>
-                    <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">{t('gender')}</TableHead>
-                    <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">{t('phone')}</TableHead>
-                    <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">{t('village')}</TableHead>
-                    <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">Ha</TableHead>
-                    <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5">{t('certification')}</TableHead>
-                    <TableHead className="font-semibold text-gray-500 text-[12px] uppercase tracking-wider whitespace-nowrap bg-gray-50/50 px-4 py-2.5 w-[140px]">{t('actions')}</TableHead>
+                    <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">Code</TableHead>
+                    <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">{t('full_name')}</TableHead>
+                    <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">{t('gender')}</TableHead>
+                    <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">{t('phone')}</TableHead>
+                    <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">{t('village')}</TableHead>
+                    <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">Ha</TableHead>
+                    <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5">{t('certification')}</TableHead>
+                    <TableHead className="font-bold text-white text-[10px] uppercase tracking-widest whitespace-nowrap bg-primary-700 px-4 py-2.5 w-[140px]">{t('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -417,85 +417,79 @@ export function FarmerTab({
 
       {/* Farmer Detail Dialog (ALL fields, grouped) */}
       <Dialog open={!!detailRecord} onOpenChange={(open) => { if (!open) setDetailRecord(null); }}>
-        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto bg-[#F9F5EF]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-primary-700" />
+            <DialogTitle className="flex items-center gap-2 text-base text-primary-800">
+              <Eye className="h-5 w-5 text-primary-600" />
               {(detailRecord?.full_name as string) || 'Farmer Detail'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-[13px] text-primary-600/70">
               {detailRecord?.farmer_code as string} — {country}
             </DialogDescription>
           </DialogHeader>
 
           {/* Action buttons — top of dialog */}
-          <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
-            <Button variant="outline" size="sm" onClick={() => {
+          <div className="flex items-center gap-1.5 pb-3 border-b border-primary-100/50">
+            <Button variant="ghost" size="sm" onClick={() => {
               if (detailRecord) {
                 const rec = detailRecord;
                 setDetailRecord(null);
                 onSelectFarmer(rec.id as string, rec.full_name as string);
               }
-            }} className="gap-1.5">
-              <Sprout className="h-3.5 w-3.5" />
+            }} className="h-7 gap-1 text-[11px] text-primary-700 hover:bg-primary-50 rounded-md px-2">
+              <Sprout className="h-3 w-3" />
               {t('view_farms')}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => {
+            <Button variant="ghost" size="sm" onClick={() => {
               if (detailRecord) {
                 const rec = detailRecord;
                 setDetailRecord(null);
                 onViewProcessing?.(rec.id as string, rec.full_name as string);
               }
-            }} className="gap-1.5">
-              <BookOpen className="h-3.5 w-3.5" />
+            }} className="h-7 gap-1 text-[11px] text-primary-700 hover:bg-primary-50 rounded-md px-2">
+              <BookOpen className="h-3 w-3" />
               {t('view_logbooks', 'Logbooks')}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => {
+            <Button variant="ghost" size="sm" onClick={() => {
               if (detailRecord) {
                 setDetailRecord(null);
                 navigate(`${ROUTES.FARMER_FORM}?country=${country}&id=${detailRecord.id}`);
               }
-            }} className="gap-1.5">
-              <Pencil className="h-3.5 w-3.5" />
+            }} className="h-7 gap-1 text-[11px] text-primary-700 hover:bg-primary-50 rounded-md px-2">
+              <Pencil className="h-3 w-3" />
               {t('edit')}
-            </Button>
-            <Button size="sm" onClick={() => setDetailRecord(null)} className="ml-auto">
-              {t('close')}
             </Button>
           </div>
 
           {detailRecord && (
-            <div className="space-y-6">
-              {FARMER_DETAIL_GROUPS.map(group => {
-                const hasData = group.fields.some(f => {
-                  const v = detailRecord[f];
-                  return v !== null && v !== undefined && v !== '' && v !== 0 && v !== false;
-                });
-                return (
-                  <div key={group.title}>
-                    <h3 className="text-sm font-semibold text-primary-800 border-b border-primary-100 pb-1 mb-2">
-                      {group.title}
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
-                      {group.fields.map(field => {
-                        const val = detailRecord[field];
-                        return (
-                          <div key={field} className="flex py-1 gap-2">
-                            <Label className="text-xs text-gray-500 w-2/5 shrink-0">{formatLabel(field)}</Label>
-                            <span className={`text-xs break-words ${val && val !== '—' ? 'text-gray-900' : 'text-gray-400'}`}>
-                              {typeof val === 'object' && val !== null ? (
-                                <pre className="text-[11px] bg-gray-50 rounded p-1 max-h-24 overflow-auto">
-                                  {JSON.stringify(val, null, 2)}
-                                </pre>
-                              ) : formatValue(val)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
+            <div className="space-y-4">
+              {FARMER_DETAIL_GROUPS.map(group => (
+                <div key={group.title} className="rounded-lg overflow-hidden border border-primary-100/50">
+                  {/* Section header */}
+                  <div className="bg-primary-700 px-3 py-2">
+                    <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{group.title}</h3>
                   </div>
-                );
-              })}
+                  {/* Rows */}
+                  <div className="divide-y divide-primary-50/80">
+                    {group.fields.map((field, idx) => {
+                      const val = detailRecord[field];
+                      const hasValue = val !== null && val !== undefined && val !== '' && val !== 0 && val !== false;
+                      return (
+                        <div key={field} className={`flex items-baseline gap-3 px-3 py-2.5 ${idx % 2 === 0 ? 'bg-white/60' : 'bg-[#F9F5EF]/60'}`}>
+                          <span className="text-[12px] font-semibold text-primary-600 w-2/5 shrink-0">{formatLabel(field)}</span>
+                          <span className={`text-[13px] font-medium break-words flex-1 ${hasValue ? 'text-[#1a3a3a]' : 'text-gray-300'}`}>
+                            {typeof val === 'object' && val !== null ? (
+                              <pre className="text-[11px] bg-white/80 rounded p-1.5 max-h-24 overflow-auto font-mono">
+                                {JSON.stringify(val, null, 2)}
+                              </pre>
+                            ) : formatValue(val)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 

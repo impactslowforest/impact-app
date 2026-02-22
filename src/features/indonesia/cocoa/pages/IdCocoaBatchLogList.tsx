@@ -4,7 +4,8 @@ const columns: ColumnDef[] = [
   { key: 'batchlog_id', label: 'Batch Log ID' },
   { key: 'batch_id', label: 'Batch ID' },
   { key: 'log_date', label: 'Log Date', render: (v) => v ? String(v).split('T')[0] : '' },
-  { key: 'farmer_id_text', label: 'Farmer ID' },
+  { key: 'farmer_id_text', label: 'Farmer Code' },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name' },
   { key: 'total_wet_beans_kg', label: 'Total Wet Beans (kg)' },
   { key: 'estimated_dry_beans_kg', label: 'Est. Dry Beans (kg)' },
   { key: 'total_wet_bean_price', label: 'Total Wet Bean Price' },
@@ -19,6 +20,7 @@ export default function IdCocoaBatchLogList() {
       title="Cocoa Batch Logs"
       collection="id_cocoa_batch_logs"
       columns={columns}
+      expand="farmer"
     />
   );
 }

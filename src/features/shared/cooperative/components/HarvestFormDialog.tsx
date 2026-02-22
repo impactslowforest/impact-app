@@ -103,36 +103,6 @@ export function HarvestFormDialog({
         </DialogHeader>
 
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-          {/* Farm + Harvest Date */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>{t('farm')} *</Label>
-              <select
-                name="farm"
-                required
-                defaultValue={(editingItem?.farm as string) ?? preselectedFarm ?? ''}
-                className="w-full rounded-lg border px-3 py-2 text-sm"
-              >
-                <option value="">{t('select_farm')}</option>
-                {farms?.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.farm_name} ({f.farm_code})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t('harvest_date')} *</Label>
-              <Input
-                name="harvest_date"
-                type="date"
-                required
-                defaultValue={(editingItem?.harvest_date as string)?.split('T')[0] ?? ''}
-                className="rounded-lg"
-              />
-            </div>
-          </div>
-
           {/* Hidden farmer field */}
           <input
             type="hidden"
@@ -140,150 +110,116 @@ export function HarvestFormDialog({
             defaultValue={(editingItem?.farmer as string) ?? preselectedFarmer ?? ''}
           />
 
-          {/* Crop Type + Variety */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>{t('crop_type')}</Label>
-              <select
-                name="crop_type"
-                defaultValue={(editingItem?.crop_type as string) ?? 'coffee_cherry'}
-                className="w-full rounded-lg border px-3 py-2 text-sm"
-              >
-                <option value="coffee_cherry">{t('coffee_cherry')}</option>
-                <option value="coffee_parchment">{t('coffee_parchment')}</option>
-                <option value="cacao_wet">{t('cacao_wet')}</option>
-                <option value="cacao_dry">{t('cacao_dry')}</option>
-                <option value="other">{t('other')}</option>
-              </select>
+          {/* Farm & Date */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="bg-primary-700 px-4 py-2">
+              <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('harvest_info', 'Harvest Info')}</h3>
             </div>
-            <div className="space-y-1.5">
-              <Label>{t('variety')}</Label>
-              <Input
-                name="variety"
-                defaultValue={(editingItem?.variety as string) ?? ''}
-                className="rounded-lg"
-              />
-            </div>
-          </div>
-
-          {/* Season + Lot Number */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>{t('season')}</Label>
-              <Input
-                name="season"
-                defaultValue={(editingItem?.season as string) ?? ''}
-                placeholder="e.g. 2024/2025"
-                className="rounded-lg"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t('lot_number')}</Label>
-              <Input
-                name="lot_number"
-                defaultValue={(editingItem?.lot_number as string) ?? ''}
-                className="rounded-lg"
-              />
-            </div>
-          </div>
-
-          {/* Quantity + Moisture */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>{t('quantity_kg')}</Label>
-              <Input
-                name="quantity_kg"
-                type="number"
-                step="0.1"
-                defaultValue={(editingItem?.quantity_kg as number) ?? ''}
-                className="rounded-lg"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t('moisture_pct')}</Label>
-              <Input
-                name="moisture_pct"
-                type="number"
-                step="0.1"
-                defaultValue={(editingItem?.moisture_pct as number) ?? ''}
-                className="rounded-lg"
-              />
+            <div className="divide-y divide-gray-100">
+              <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('farm')} *</span>
+                <select name="farm" required defaultValue={(editingItem?.farm as string) ?? preselectedFarm ?? ''}
+                  className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none">
+                  <option value="">{t('select_farm')}</option>
+                  {farms?.map((f) => (
+                    <option key={f.id} value={f.id}>{f.farm_name} ({f.farm_code})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('harvest_date')} *</span>
+                <Input name="harvest_date" type="date" required defaultValue={(editingItem?.harvest_date as string)?.split('T')[0] ?? ''}
+                  className="flex-1 rounded-lg bg-white" />
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('crop_type')}</span>
+                <select name="crop_type" defaultValue={(editingItem?.crop_type as string) ?? 'coffee_cherry'}
+                  className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none">
+                  <option value="coffee_cherry">{t('coffee_cherry')}</option>
+                  <option value="coffee_parchment">{t('coffee_parchment')}</option>
+                  <option value="cacao_wet">{t('cacao_wet')}</option>
+                  <option value="cacao_dry">{t('cacao_dry')}</option>
+                  <option value="other">{t('other')}</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('variety')}</span>
+                <Input name="variety" defaultValue={(editingItem?.variety as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('season')}</span>
+                <Input name="season" defaultValue={(editingItem?.season as string) ?? ''} placeholder="e.g. 2024/2025" className="flex-1 rounded-lg bg-white" />
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('lot_number')}</span>
+                <Input name="lot_number" defaultValue={(editingItem?.lot_number as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+              </div>
             </div>
           </div>
 
-          {/* Quality Grade + Processing Method */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>{t('quality_grade')}</Label>
-              <select
-                name="quality_grade"
-                defaultValue={(editingItem?.quality_grade as string) ?? 'A'}
-                className="w-full rounded-lg border px-3 py-2 text-sm"
-              >
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="reject">{t('reject')}</option>
-              </select>
+          {/* Quantity & Quality */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="bg-primary-700 px-4 py-2">
+              <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('quantity_quality', 'Quantity & Quality')}</h3>
             </div>
-            <div className="space-y-1.5">
-              <Label>{t('processing_method')}</Label>
-              <select
-                name="processing_method"
-                defaultValue={(editingItem?.processing_method as string) ?? 'washed'}
-                className="w-full rounded-lg border px-3 py-2 text-sm"
-              >
-                <option value="wet">{t('wet')}</option>
-                <option value="dry">{t('dry')}</option>
-                <option value="honey">{t('honey')}</option>
-                <option value="natural">{t('natural')}</option>
-                <option value="washed">{t('washed')}</option>
-                <option value="semi_washed">{t('semi_washed')}</option>
-                <option value="other">{t('other')}</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Price + Currency */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>{t('price_per_kg')}</Label>
-              <Input
-                name="price_per_kg"
-                type="number"
-                step="0.01"
-                defaultValue={(editingItem?.price_per_kg as number) ?? ''}
-                className="rounded-lg"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t('currency')}</Label>
-              <Input
-                name="currency"
-                defaultValue={(editingItem?.currency as string) ?? 'USD'}
-                className="rounded-lg"
-              />
+            <div className="divide-y divide-gray-100">
+              <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('quantity_kg')}</span>
+                <Input name="quantity_kg" type="number" step="0.1" defaultValue={(editingItem?.quantity_kg as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('moisture_pct')}</span>
+                <Input name="moisture_pct" type="number" step="0.1" defaultValue={(editingItem?.moisture_pct as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('quality_grade')}</span>
+                <select name="quality_grade" defaultValue={(editingItem?.quality_grade as string) ?? 'A'}
+                  className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none">
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="reject">{t('reject')}</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('processing_method')}</span>
+                <select name="processing_method" defaultValue={(editingItem?.processing_method as string) ?? 'washed'}
+                  className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-400 outline-none">
+                  <option value="wet">{t('wet')}</option>
+                  <option value="dry">{t('dry')}</option>
+                  <option value="honey">{t('honey')}</option>
+                  <option value="natural">{t('natural')}</option>
+                  <option value="washed">{t('washed')}</option>
+                  <option value="semi_washed">{t('semi_washed')}</option>
+                  <option value="other">{t('other')}</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Buyer */}
-          <div className="space-y-1.5">
-            <Label>{t('buyer')}</Label>
-            <Input
-              name="buyer"
-              defaultValue={(editingItem?.buyer as string) ?? ''}
-              className="rounded-lg"
-            />
-          </div>
-
-          {/* Notes */}
-          <div className="space-y-1.5">
-            <Label>{t('notes')}</Label>
-            <Input
-              name="notes"
-              defaultValue={(editingItem?.notes as string) ?? ''}
-              className="rounded-lg"
-            />
+          {/* Price & Sale */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="bg-primary-700 px-4 py-2">
+              <h3 className="text-[12px] font-bold text-white uppercase tracking-wider">{t('price_sale', 'Price & Sale')}</h3>
+            </div>
+            <div className="divide-y divide-gray-100">
+              <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('price_per_kg')}</span>
+                <Input name="price_per_kg" type="number" step="0.01" defaultValue={(editingItem?.price_per_kg as number) ?? ''} className="flex-1 rounded-lg bg-white" />
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('currency')}</span>
+                <Input name="currency" defaultValue={(editingItem?.currency as string) ?? 'USD'} className="flex-1 rounded-lg bg-white" />
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-white">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('buyer')}</span>
+                <Input name="buyer" defaultValue={(editingItem?.buyer as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+              </div>
+              <div className="flex items-center gap-4 px-4 py-3 bg-gray-50/50">
+                <span className="text-[13px] font-medium text-primary-700 w-2/5 shrink-0">{t('notes')}</span>
+                <Input name="notes" defaultValue={(editingItem?.notes as string) ?? ''} className="flex-1 rounded-lg bg-white" />
+              </div>
+            </div>
           </div>
 
           {/* Submit */}

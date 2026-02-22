@@ -68,9 +68,14 @@ export default function DashboardPage() {
 
   const [barChartType, setBarChartType] = useState<ChartType>('bar');
   const [pieChartType, setPieChartType] = useState<ChartType>('pie');
-  const { dashboardMenus, dashboardKpis, dashboardCharts } = useUIStore();
+  const { dashboardMenus, dashboardKpis, dashboardCharts, activeCountry, countryDashboardMenus } = useUIStore();
 
-  const c = user?.country;
+  const rawCountry = user?.country;
+  const c = (rawCountry === 'global' && activeCountry !== 'all') ? activeCountry : rawCountry;
+  const effectiveCountryKey = rawCountry === 'global'
+    ? (activeCountry !== 'all' ? activeCountry : 'all')
+    : (rawCountry || 'all');
+  const effectiveDashboardMenus = countryDashboardMenus[effectiveCountryKey] || dashboardMenus;
   const isGlobal = !c || c === 'global';
   const countries = isGlobal ? ['laos', 'indonesia', 'vietnam'] : [c!];
 
@@ -154,8 +159,8 @@ export default function DashboardPage() {
     { key: 'eudr', icon: ShieldCheck, route: countryRoute(c, { laos: ROUTES.LA_EUDR, indonesia: ROUTES.ID_EUDR, vietnam: ROUTES.VN_EUDR }, ROUTES.IMPACT_EUDR), gradient: 'from-red-500 to-rose-600' },
     { key: 'ghg', icon: BarChart3, route: countryRoute(c, { laos: ROUTES.LA_GHG }, ROUTES.IMPACT_GHG), gradient: 'from-teal-500 to-cyan-600' },
     { key: 'farm_map', icon: Map, route: ROUTES.MAP, gradient: 'from-blue-500 to-indigo-600' },
-    { key: 'staff', icon: UserCog, route: countryRoute(c, { laos: ROUTES.LA_STAFF, indonesia: ROUTES.ID_STAFF, vietnam: ROUTES.VN_STAFF }, ROUTES.DASHBOARD), gradient: 'from-gray-500 to-slate-600' },
-    { key: 'offices', icon: Building2, route: countryRoute(c, { laos: ROUTES.LA_OFFICES, indonesia: ROUTES.ID_OFFICES, vietnam: ROUTES.VN_OFFICES }, ROUTES.DASHBOARD), gradient: 'from-amber-500 to-orange-600' },
+    { key: 'staff', icon: UserCog, route: countryRoute(c, { laos: ROUTES.LA_STAFF, indonesia: ROUTES.ID_STAFF, vietnam: ROUTES.VN_STAFF }, ROUTES.LA_STAFF), gradient: 'from-gray-500 to-slate-600' },
+    { key: 'offices', icon: Building2, route: countryRoute(c, { laos: ROUTES.LA_OFFICES, indonesia: ROUTES.ID_OFFICES, vietnam: ROUTES.VN_OFFICES }, ROUTES.LA_OFFICES), gradient: 'from-amber-500 to-orange-600' },
     { key: 'implementation', icon: Briefcase, route: ROUTES.IMPACT_IMPL, gradient: 'from-violet-500 to-purple-600' },
     { key: 'client_carbon', icon: Leaf, route: ROUTES.IMPACT_CLIENT_CARBON, gradient: 'from-lime-500 to-green-600' },
     // Country-specific modules
@@ -163,7 +168,7 @@ export default function DashboardPage() {
     { key: 'daycare', icon: Baby, route: ROUTES.LA_DAYCARE, gradient: 'from-pink-500 to-rose-600' },
     { key: 'cocoa_purchase', icon: Bean, route: ROUTES.ID_COCOA, gradient: 'from-yellow-600 to-amber-700' },
     { key: 'ra_audit', icon: ClipboardCheck, route: ROUTES.ID_RA_AUDIT, gradient: 'from-sky-500 to-blue-600' },
-    { key: 'coffee_price', icon: Coffee, route: countryRoute(c, { laos: ROUTES.LA_COFFEE_PRICE, vietnam: ROUTES.VN_COFFEE_PRICE }, ROUTES.DASHBOARD), gradient: 'from-amber-600 to-yellow-700' },
+    { key: 'coffee_price', icon: Coffee, route: countryRoute(c, { laos: ROUTES.LA_COFFEE_PRICE, vietnam: ROUTES.VN_COFFEE_PRICE }, ROUTES.LA_COFFEE_PRICE), gradient: 'from-amber-600 to-yellow-700' },
     { key: 'cocoa_price', icon: Bean, route: ROUTES.ID_CACAO_PRICE, gradient: 'from-orange-600 to-red-700' },
   ], [c]);
 
@@ -178,18 +183,18 @@ export default function DashboardPage() {
   // Navigation helpers
   const navToFarmers = (country: string) => {
     const routes: Record<string, string> = { laos: `${ROUTES.LA_COOPERATIVE}/data?tab=farmers`, indonesia: `${ROUTES.ID_COOPERATIVE}/data?tab=farmers`, vietnam: `${ROUTES.VN_COOPERATIVE}/data?tab=farmers` };
-    navigate(routes[country] ?? ROUTES.DASHBOARD);
+    navigate(routes[country] ?? ROUTES.MOD_COOPERATIVE);
   };
   const navToFarms = (country: string) => {
     const routes: Record<string, string> = { laos: `${ROUTES.LA_COOPERATIVE}/data?tab=farms`, indonesia: `${ROUTES.ID_COOPERATIVE}/data?tab=farms`, vietnam: `${ROUTES.VN_COOPERATIVE}/data?tab=farms` };
-    navigate(routes[country] ?? ROUTES.DASHBOARD);
+    navigate(routes[country] ?? ROUTES.MOD_COOPERATIVE);
   };
 
   // KPI cards
   const kpis = [
-    { key: 'cooperatives', label: t('common:cooperatives', 'Cooperatives'), value: coopCount, icon: Building2, gradient: 'from-green-500 to-emerald-600', route: countryRoute(c, { laos: ROUTES.LA_COOPERATIVE, indonesia: ROUTES.ID_COOPERATIVE, vietnam: ROUTES.VN_COOPERATIVE }, ROUTES.DASHBOARD) },
-    { key: 'farmers', label: t('common:farmers', 'Farmers'), value: farmerCount, icon: Users, gradient: 'from-amber-500 to-orange-600', route: countryRoute(c, { laos: `${ROUTES.LA_COOPERATIVE}/data?tab=farmers`, indonesia: `${ROUTES.ID_COOPERATIVE}/data?tab=farmers`, vietnam: `${ROUTES.VN_COOPERATIVE}/data?tab=farmers` }, ROUTES.DASHBOARD) },
-    { key: 'farms', label: t('common:total_plots', 'Farms'), value: farmCount, icon: TreePine, gradient: 'from-emerald-500 to-teal-600', route: countryRoute(c, { laos: `${ROUTES.LA_COOPERATIVE}/data?tab=farms`, indonesia: `${ROUTES.ID_COOPERATIVE}/data?tab=farms`, vietnam: `${ROUTES.VN_COOPERATIVE}/data?tab=farms` }, ROUTES.DASHBOARD) },
+    { key: 'cooperatives', label: t('common:cooperatives', 'Cooperatives'), value: coopCount, icon: Building2, gradient: 'from-green-500 to-emerald-600', route: countryRoute(c, { laos: ROUTES.LA_COOPERATIVE, indonesia: ROUTES.ID_COOPERATIVE, vietnam: ROUTES.VN_COOPERATIVE }, ROUTES.MOD_COOPERATIVE) },
+    { key: 'farmers', label: t('common:farmers', 'Farmers'), value: farmerCount, icon: Users, gradient: 'from-amber-500 to-orange-600', route: countryRoute(c, { laos: `${ROUTES.LA_COOPERATIVE}/data?tab=farmers`, indonesia: `${ROUTES.ID_COOPERATIVE}/data?tab=farmers`, vietnam: `${ROUTES.VN_COOPERATIVE}/data?tab=farmers` }, ROUTES.MOD_COOPERATIVE) },
+    { key: 'farms', label: t('common:total_plots', 'Farms'), value: farmCount, icon: TreePine, gradient: 'from-emerald-500 to-teal-600', route: countryRoute(c, { laos: `${ROUTES.LA_COOPERATIVE}/data?tab=farms`, indonesia: `${ROUTES.ID_COOPERATIVE}/data?tab=farms`, vietnam: `${ROUTES.VN_COOPERATIVE}/data?tab=farms` }, ROUTES.MOD_COOPERATIVE) },
     { key: 'total_area', label: t('common:total_area', 'Total Area'), value: `${totalAreaHa.toLocaleString()} ha`, icon: MapPin, gradient: 'from-blue-500 to-indigo-600', route: countryRoute(c, { laos: ROUTES.LA_EUDR, indonesia: ROUTES.ID_EUDR, vietnam: ROUTES.VN_EUDR }, ROUTES.IMPACT_EUDR) },
     { key: 'avg_area', label: t('common:avg_area', 'Avg / Farmer'), value: `${avgArea} ha`, icon: Home, gradient: 'from-purple-500 to-violet-600', route: ROUTES.IMPACT_EUDR },
     { key: 'eudr_plots', label: 'EUDR Plots', value: farmCount, icon: ShieldCheck, gradient: 'from-red-500 to-rose-600', route: countryRoute(c, { laos: ROUTES.LA_EUDR, indonesia: ROUTES.ID_EUDR, vietnam: ROUTES.VN_EUDR }, ROUTES.IMPACT_EUDR) },
@@ -200,7 +205,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6 page-enter min-h-full">
       {/* ── Row 1: Quick Navigation ─────────────────────── */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-        {moduleCards.filter(mod => validMenuKeys.has(mod.key) && dashboardMenus.includes(mod.key)).map((mod) => {
+        {moduleCards.filter(mod => validMenuKeys.has(mod.key) && effectiveDashboardMenus.includes(mod.key)).map((mod) => {
           const Icon = mod.icon;
           return (
             <button key={mod.key} type="button" onClick={() => navigate(mod.route)}
@@ -417,12 +422,12 @@ export default function DashboardPage() {
           <div className="flex-1 overflow-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b-2 border-gray-100">
-                  <th className="text-left py-2 px-2 font-semibold text-gray-500 text-xs uppercase tracking-wider">{t('common:country', 'Country')}</th>
-                  <th className="text-right py-2 px-2 font-semibold text-gray-500 text-xs uppercase tracking-wider">Coops</th>
-                  <th className="text-right py-2 px-2 font-semibold text-gray-500 text-xs uppercase tracking-wider">{t('common:farmers', 'Farmers')}</th>
-                  <th className="text-right py-2 px-2 font-semibold text-gray-500 text-xs uppercase tracking-wider">{t('common:total_plots', 'Farms')}</th>
-                  <th className="text-right py-2 px-2 font-semibold text-gray-500 text-xs uppercase tracking-wider">ha</th>
+                <tr className="bg-primary-700">
+                  <th className="text-left py-2 px-2 font-semibold text-white text-xs uppercase tracking-wider rounded-tl-lg">{t('common:country', 'Country')}</th>
+                  <th className="text-right py-2 px-2 font-semibold text-white text-xs uppercase tracking-wider">Coops</th>
+                  <th className="text-right py-2 px-2 font-semibold text-white text-xs uppercase tracking-wider">{t('common:farmers', 'Farmers')}</th>
+                  <th className="text-right py-2 px-2 font-semibold text-white text-xs uppercase tracking-wider">{t('common:total_plots', 'Farms')}</th>
+                  <th className="text-right py-2 px-2 font-semibold text-white text-xs uppercase tracking-wider rounded-tr-lg">ha</th>
                 </tr>
               </thead>
               <tbody>

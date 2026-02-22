@@ -1,8 +1,8 @@
 import PbCollectionTable, { type ColumnDef } from '@/components/shared/PbCollectionTable';
 
 const columns: ColumnDef[] = [
-  { key: 'farmer_id_text', label: 'Farmer ID' },
-  { key: 'farmer_name', label: 'Farmer Name' },
+  { key: 'farmer_id_text', label: 'Farmer Code' },
+  { key: 'farmer_name', label: 'Farmer', field: 'farmer.full_name' },
   { key: 'province', label: 'Province' },
   { key: 'district', label: 'District' },
   { key: 'village', label: 'Village' },
@@ -11,7 +11,6 @@ const columns: ColumnDef[] = [
   { key: 'observation_stations', label: 'Observation Stations' },
   { key: 'est_production_2024', label: 'Est. Production 2024' },
   { key: 'est_production_2025', label: 'Est. Production 2025' },
-  { key: 'inspector_name', label: 'Inspector Name' },
 ];
 
 export default function RaFarmerInspectionList() {
@@ -20,6 +19,7 @@ export default function RaFarmerInspectionList() {
       title="RA Farmer Inspections"
       collection="ra_farmer_inspections"
       columns={columns}
+      expand="farmer"
     />
   );
 }
