@@ -4,7 +4,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const base = process.env.GITHUB_ACTIONS ? '/impact-app/' : '/';
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     tailwindcss(),
@@ -18,8 +21,8 @@ export default defineConfig({
         theme_color: '#116B2A',
         background_color: '#f8faf5',
         display: 'standalone',
-        scope: '/',
-        start_url: '/',
+        scope: base,
+        start_url: base,
         orientation: 'any',
         icons: [
           {
