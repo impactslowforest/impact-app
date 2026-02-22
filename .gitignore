@@ -1,0 +1,55 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# PocketBase data (binary + user data)
+pocketbase/pb_data/
+pocketbase/pocketbase.exe
+pocketbase/*.db
+
+# OS
+Thumbs.db
+_ul*
+
+# Temp/debug scripts at root
+analyze-xlsx.js
+debug_*.js
+debug_*.cjs
+fix_roles_rule.js
+pocketbase_check.js
+seed_roles.js
+pocketbase/import_*.js
+pocketbase/import_*.cjs
+pocketbase/seed-data.js
+pocketbase/pb_start_log.txt
+
+# Debug migrations
+pocketbase/pb_migrations/997_*
+pocketbase/pb_migrations/998_*
+pocketbase/pb_migrations/999_*

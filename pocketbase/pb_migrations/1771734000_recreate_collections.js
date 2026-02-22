@@ -1,0 +1,301 @@
+/// <reference path="../pb_data/types.d.ts" />
+
+// Recreate the 8 deleted collections with same schema as migration 016
+
+migrate((app) => {
+  const farmers = app.findCollectionByNameOrId("farmers");
+  const farms = app.findCollectionByNameOrId("farms");
+  const suppliers = app.findCollectionByNameOrId("suppliers");
+  const authRule = '@request.auth.id != ""';
+
+  // Helper: create collection only if it doesn't exist
+  function ensureCollection(name) {
+    try {
+      return app.findCollectionByNameOrId(name);
+    } catch (e) {
+      const col = new Collection({ name: name, type: "base" });
+      app.save(col);
+      return app.findCollectionByNameOrId(name);
+    }
+  }
+
+  // 1. FARMER LOG BOOKS
+  const flb = ensureCollection("farmer_log_books");
+  flb.fields.add(new TextField({ name: "log_code", required: true, max: 50 }));
+  flb.fields.add(new RelationField({ name: "farmer", collectionId: farmers.id, maxSelect: 1 }));
+  flb.fields.add(new TextField({ name: "village_code", max: 20 }));
+  flb.fields.add(new TextField({ name: "farmer_name", max: 200 }));
+  flb.fields.add(new TextField({ name: "variety", max: 200 }));
+  flb.fields.add(new TextField({ name: "process", max: 100 }));
+  flb.fields.add(new NumberField({ name: "eu_organic_kg", min: 0 }));
+  flb.fields.add(new NumberField({ name: "fairtrade_kg", min: 0 }));
+  flb.fields.add(new NumberField({ name: "non_certificate_kg", min: 0 }));
+  flb.fields.add(new DateField({ name: "log_date" }));
+  flb.fields.add(new NumberField({ name: "latitude" }));
+  flb.fields.add(new NumberField({ name: "longitude" }));
+  flb.fields.add(new TextField({ name: "dry_mill_name", max: 200 }));
+  flb.fields.add(new NumberField({ name: "moisture_pct" }));
+  flb.fields.add(new NumberField({ name: "aw_level" }));
+  flb.fields.add(new NumberField({ name: "number_of_bags", min: 0 }));
+  flb.fields.add(new NumberField({ name: "weight_total_kg", min: 0 }));
+  flb.fields.add(new DateField({ name: "delivery_date" }));
+  flb.fields.add(new TextField({ name: "remark" }));
+  flb.fields.add(new TextField({ name: "staff_input", max: 50 }));
+  flb.fields.add(new SelectField({ name: "country", values: ["indonesia", "vietnam", "laos"] }));
+  flb.fields.add(new TextField({ name: "season", max: 20 }));
+  flb.fields.add(new AutodateField({ name: "created", onCreate: true, onUpdate: false }));
+  flb.fields.add(new AutodateField({ name: "updated", onCreate: true, onUpdate: true }));
+  flb.indexes = ["CREATE UNIQUE INDEX idx_flb_log_code ON farmer_log_books (log_code)", "CREATE INDEX idx_flb_farmer ON farmer_log_books (farmer)", "CREATE INDEX idx_flb_country ON farmer_log_books (country)"];
+  flb.listRule = authRule; flb.viewRule = authRule; flb.createRule = authRule; flb.updateRule = authRule; flb.deleteRule = authRule;
+  app.save(flb);
+  console.log("[Recreate] farmer_log_books");
+
+  // 2. FARM LOG BOOKS
+  const fmlb = ensureCollection("farm_log_books");
+  fmlb.fields.add(new TextField({ name: "log_code", required: true, max: 50 }));
+  fmlb.fields.add(new RelationField({ name: "farmer", collectionId: farmers.id, maxSelect: 1 }));
+  fmlb.fields.add(new RelationField({ name: "farm", collectionId: farms.id, maxSelect: 1 }));
+  fmlb.fields.add(new RelationField({ name: "farmer_log_book", collectionId: flb.id, maxSelect: 1 }));
+  fmlb.fields.add(new TextField({ name: "village_code", max: 20 }));
+  fmlb.fields.add(new TextField({ name: "farm_name", max: 200 }));
+  fmlb.fields.add(new TextField({ name: "certificate", max: 300 }));
+  fmlb.fields.add(new TextField({ name: "variety", max: 200 }));
+  fmlb.fields.add(new TextField({ name: "process", max: 100 }));
+  fmlb.fields.add(new DateField({ name: "log_date" }));
+  fmlb.fields.add(new NumberField({ name: "latitude" }));
+  fmlb.fields.add(new NumberField({ name: "longitude" }));
+  fmlb.fields.add(new TextField({ name: "dry_mill_name", max: 200 }));
+  fmlb.fields.add(new NumberField({ name: "moisture_pct" }));
+  fmlb.fields.add(new NumberField({ name: "aw_level" }));
+  fmlb.fields.add(new NumberField({ name: "number_of_bags", min: 0 }));
+  fmlb.fields.add(new NumberField({ name: "weight_per_bag_kg", min: 0 }));
+  fmlb.fields.add(new NumberField({ name: "weight_total_kg", min: 0 }));
+  fmlb.fields.add(new DateField({ name: "delivery_date" }));
+  fmlb.fields.add(new TextField({ name: "remark" }));
+  fmlb.fields.add(new TextField({ name: "staff_input", max: 50 }));
+  fmlb.fields.add(new SelectField({ name: "country", values: ["indonesia", "vietnam", "laos"] }));
+  fmlb.fields.add(new TextField({ name: "season", max: 20 }));
+  fmlb.fields.add(new AutodateField({ name: "created", onCreate: true, onUpdate: false }));
+  fmlb.fields.add(new AutodateField({ name: "updated", onCreate: true, onUpdate: true }));
+  fmlb.indexes = ["CREATE UNIQUE INDEX idx_fmlb_log_code ON farm_log_books (log_code)", "CREATE INDEX idx_fmlb_farm ON farm_log_books (farm)", "CREATE INDEX idx_fmlb_farmer ON farm_log_books (farmer)"];
+  fmlb.listRule = authRule; fmlb.viewRule = authRule; fmlb.createRule = authRule; fmlb.updateRule = authRule; fmlb.deleteRule = authRule;
+  app.save(fmlb);
+  console.log("[Recreate] farm_log_books");
+
+  // 3. HARVESTING LOGS
+  const hl = ensureCollection("harvesting_logs");
+  hl.fields.add(new TextField({ name: "log_code", required: true, max: 50 }));
+  hl.fields.add(new RelationField({ name: "farmer", collectionId: farmers.id, maxSelect: 1 }));
+  hl.fields.add(new RelationField({ name: "farm", collectionId: farms.id, maxSelect: 1 }));
+  hl.fields.add(new TextField({ name: "village_code", max: 20 }));
+  hl.fields.add(new TextField({ name: "village_name", max: 200 }));
+  hl.fields.add(new TextField({ name: "farmer_name", max: 200 }));
+  hl.fields.add(new TextField({ name: "farm_name", max: 200 }));
+  hl.fields.add(new TextField({ name: "variety", max: 200 }));
+  hl.fields.add(new TextField({ name: "species", max: 200 }));
+  hl.fields.add(new DateField({ name: "picking_date" }));
+  hl.fields.add(new NumberField({ name: "latitude" }));
+  hl.fields.add(new NumberField({ name: "longitude" }));
+  hl.fields.add(new TextField({ name: "staff_input", max: 50 }));
+  hl.fields.add(new DateField({ name: "date_report" }));
+  hl.fields.add(new NumberField({ name: "eu_organic_kg", min: 0 }));
+  hl.fields.add(new NumberField({ name: "fairtrade_kg", min: 0 }));
+  hl.fields.add(new NumberField({ name: "non_certificate_kg", min: 0 }));
+  hl.fields.add(new NumberField({ name: "cherry_picked_kg", min: 0 }));
+  hl.fields.add(new NumberField({ name: "ripe_pulped_kg", min: 0 }));
+  hl.fields.add(new NumberField({ name: "float_rate_kg", min: 0 }));
+  hl.fields.add(new NumberField({ name: "fermentation_hours" }));
+  hl.fields.add(new DateField({ name: "fermentation_date" }));
+  hl.fields.add(new NumberField({ name: "wet_parchment_kg", min: 0 }));
+  hl.fields.add(new NumberField({ name: "rate_parchment" }));
+  hl.fields.add(new NumberField({ name: "dry_parchment_kg", min: 0 }));
+  hl.fields.add(new NumberField({ name: "drying_days", min: 0 }));
+  hl.fields.add(new DateField({ name: "drying_start_date" }));
+  hl.fields.add(new DateField({ name: "drying_end_date" }));
+  hl.fields.add(new NumberField({ name: "moisture_pct" }));
+  hl.fields.add(new TextField({ name: "stored_at", max: 200 }));
+  hl.fields.add(new DateField({ name: "transport_date" }));
+  hl.fields.add(new TextField({ name: "remark" }));
+  hl.fields.add(new TextField({ name: "status", max: 50 }));
+  hl.fields.add(new SelectField({ name: "country", values: ["indonesia", "vietnam", "laos"] }));
+  hl.fields.add(new TextField({ name: "season", max: 20 }));
+  hl.fields.add(new AutodateField({ name: "created", onCreate: true, onUpdate: false }));
+  hl.fields.add(new AutodateField({ name: "updated", onCreate: true, onUpdate: true }));
+  hl.fields.add(new RelationField({ name: "farm_log_book", collectionId: fmlb.id, maxSelect: 1 }));
+  hl.indexes = ["CREATE UNIQUE INDEX idx_hl_log_code ON harvesting_logs (log_code)", "CREATE INDEX idx_hl_farmer ON harvesting_logs (farmer)", "CREATE INDEX idx_hl_farm ON harvesting_logs (farm)", "CREATE INDEX idx_hl_country ON harvesting_logs (country)", "CREATE INDEX idx_hl_season ON harvesting_logs (season)"];
+  hl.listRule = authRule; hl.viewRule = authRule; hl.createRule = authRule; hl.updateRule = authRule; hl.deleteRule = authRule;
+  app.save(hl);
+  console.log("[Recreate] harvesting_logs");
+
+  // 4. LOG BOOK DETAILS
+  const lbd = ensureCollection("log_book_details");
+  lbd.fields.add(new TextField({ name: "lot_code", required: true, max: 50 }));
+  lbd.fields.add(new RelationField({ name: "farmer", collectionId: farmers.id, maxSelect: 1 }));
+  lbd.fields.add(new RelationField({ name: "farm", collectionId: farms.id, maxSelect: 1 }));
+  lbd.fields.add(new RelationField({ name: "farmer_log_book", collectionId: flb.id, maxSelect: 1 }));
+  lbd.fields.add(new RelationField({ name: "farm_log_book", collectionId: fmlb.id, maxSelect: 1 }));
+  lbd.fields.add(new TextField({ name: "village_code", max: 20 }));
+  lbd.fields.add(new TextField({ name: "farm_name", max: 200 }));
+  lbd.fields.add(new TextField({ name: "certificate", max: 300 }));
+  lbd.fields.add(new TextField({ name: "variety", max: 200 }));
+  lbd.fields.add(new TextField({ name: "process", max: 100 }));
+  lbd.fields.add(new DateField({ name: "log_date" }));
+  lbd.fields.add(new TextField({ name: "dry_mill_name", max: 200 }));
+  lbd.fields.add(new NumberField({ name: "moisture_pct" }));
+  lbd.fields.add(new NumberField({ name: "aw_level" }));
+  lbd.fields.add(new NumberField({ name: "number_of_bags", min: 0 }));
+  lbd.fields.add(new NumberField({ name: "weight_total_kg", min: 0 }));
+  lbd.fields.add(new NumberField({ name: "weight_per_bag_kg", min: 0 }));
+  lbd.fields.add(new DateField({ name: "delivery_date" }));
+  lbd.fields.add(new TextField({ name: "sale_status", max: 50 }));
+  lbd.fields.add(new TextField({ name: "remark" }));
+  lbd.fields.add(new TextField({ name: "staff_input", max: 50 }));
+  lbd.fields.add(new SelectField({ name: "country", values: ["indonesia", "vietnam", "laos"] }));
+  lbd.fields.add(new TextField({ name: "season", max: 20 }));
+  lbd.fields.add(new AutodateField({ name: "created", onCreate: true, onUpdate: false }));
+  lbd.fields.add(new AutodateField({ name: "updated", onCreate: true, onUpdate: true }));
+  lbd.indexes = ["CREATE UNIQUE INDEX idx_lbd_lot_code ON log_book_details (lot_code)", "CREATE INDEX idx_lbd_farm ON log_book_details (farm)", "CREATE INDEX idx_lbd_farm_log ON log_book_details (farm_log_book)"];
+  lbd.listRule = authRule; lbd.viewRule = authRule; lbd.createRule = authRule; lbd.updateRule = authRule; lbd.deleteRule = authRule;
+  app.save(lbd);
+  console.log("[Recreate] log_book_details");
+
+  // 5. INBOUND REQUESTS
+  const ir = ensureCollection("inbound_requests");
+  ir.fields.add(new TextField({ name: "inbound_code", max: 50 }));
+  ir.fields.add(new TextField({ name: "source", max: 100 }));
+  ir.fields.add(new TextField({ name: "input_type", max: 100 }));
+  ir.fields.add(new RelationField({ name: "farmer", collectionId: farmers.id, maxSelect: 1 }));
+  ir.fields.add(new RelationField({ name: "farm", collectionId: farms.id, maxSelect: 1 }));
+  ir.fields.add(new RelationField({ name: "supplier", collectionId: suppliers.id, maxSelect: 1 }));
+  ir.fields.add(new TextField({ name: "village_code", max: 20 }));
+  ir.fields.add(new TextField({ name: "village_name", max: 200 }));
+  ir.fields.add(new TextField({ name: "farmer_name", max: 200 }));
+  ir.fields.add(new TextField({ name: "farmer_code", max: 50 }));
+  ir.fields.add(new TextField({ name: "farm_code", max: 50 }));
+  ir.fields.add(new TextField({ name: "company_name", max: 300 }));
+  ir.fields.add(new TextField({ name: "staff", max: 50 }));
+  ir.fields.add(new DateField({ name: "request_date" }));
+  ir.fields.add(new TextField({ name: "variety", max: 200 }));
+  ir.fields.add(new TextField({ name: "process", max: 100 }));
+  ir.fields.add(new NumberField({ name: "total_bags", min: 0 }));
+  ir.fields.add(new NumberField({ name: "moisture_pct" }));
+  ir.fields.add(new NumberField({ name: "weight_total_kg", min: 0 }));
+  ir.fields.add(new NumberField({ name: "check_bags", min: 0 }));
+  ir.fields.add(new NumberField({ name: "check_moisture_pct" }));
+  ir.fields.add(new NumberField({ name: "check_weight_kg", min: 0 }));
+  ir.fields.add(new TextField({ name: "requestor_info", max: 500 }));
+  ir.fields.add(new TextField({ name: "status", max: 50 }));
+  ir.fields.add(new TextField({ name: "vehicle_number", max: 50 }));
+  ir.fields.add(new TextField({ name: "approval_status", max: 50 }));
+  ir.fields.add(new TextField({ name: "outbound_status", max: 50 }));
+  ir.fields.add(new SelectField({ name: "country", values: ["indonesia", "vietnam", "laos"] }));
+  ir.fields.add(new TextField({ name: "season", max: 20 }));
+  ir.fields.add(new AutodateField({ name: "created", onCreate: true, onUpdate: false }));
+  ir.fields.add(new AutodateField({ name: "updated", onCreate: true, onUpdate: true }));
+  ir.indexes = ["CREATE UNIQUE INDEX idx_ir_inbound_code ON inbound_requests (inbound_code)", "CREATE INDEX idx_ir_farm ON inbound_requests (farm)", "CREATE INDEX idx_ir_farmer ON inbound_requests (farmer)", "CREATE INDEX idx_ir_country ON inbound_requests (country)"];
+  ir.listRule = authRule; ir.viewRule = authRule; ir.createRule = authRule; ir.updateRule = authRule; ir.deleteRule = authRule;
+  app.save(ir);
+  console.log("[Recreate] inbound_requests");
+
+  // 6. OUTBOUND REQUESTS
+  const orr = ensureCollection("outbound_requests");
+  orr.fields.add(new TextField({ name: "outbound_code", required: true, max: 50 }));
+  orr.fields.add(new TextField({ name: "source", max: 100 }));
+  orr.fields.add(new RelationField({ name: "owner", collectionId: suppliers.id, maxSelect: 1 }));
+  orr.fields.add(new RelationField({ name: "inbound_request", collectionId: ir.id, maxSelect: 1 }));
+  orr.fields.add(new RelationField({ name: "farm", collectionId: farms.id, maxSelect: 1 }));
+  orr.fields.add(new TextField({ name: "bean_type", max: 100 }));
+  orr.fields.add(new TextField({ name: "variety", max: 200 }));
+  orr.fields.add(new TextField({ name: "process", max: 100 }));
+  orr.fields.add(new TextField({ name: "certificate_type", max: 200 }));
+  orr.fields.add(new NumberField({ name: "inbound_bags", min: 0 }));
+  orr.fields.add(new NumberField({ name: "inbound_quantity_kg", min: 0 }));
+  orr.fields.add(new TextField({ name: "season", max: 20 }));
+  orr.fields.add(new NumberField({ name: "inbound_moisture_pct" }));
+  orr.fields.add(new NumberField({ name: "active_water_level" }));
+  orr.fields.add(new TextField({ name: "request_by", max: 200 }));
+  orr.fields.add(new TextField({ name: "outbound_zone", max: 200 }));
+  orr.fields.add(new DateField({ name: "outbound_date" }));
+  orr.fields.add(new TextField({ name: "outbound_type", max: 100 }));
+  orr.fields.add(new TextField({ name: "outbound_reason" }));
+  orr.fields.add(new NumberField({ name: "outbound_bags", min: 0 }));
+  orr.fields.add(new NumberField({ name: "outbound_quantity_kg", min: 0 }));
+  orr.fields.add(new NumberField({ name: "outbound_moisture_pct" }));
+  orr.fields.add(new NumberField({ name: "outbound_aw_level" }));
+  orr.fields.add(new NumberField({ name: "dry_parchment_hulled_kg", min: 0 }));
+  orr.fields.add(new NumberField({ name: "green_bean_kg", min: 0 }));
+  orr.fields.add(new TextField({ name: "staff", max: 50 }));
+  orr.fields.add(new SelectField({ name: "country", values: ["indonesia", "vietnam", "laos"] }));
+  orr.fields.add(new AutodateField({ name: "created", onCreate: true, onUpdate: false }));
+  orr.fields.add(new AutodateField({ name: "updated", onCreate: true, onUpdate: true }));
+  orr.indexes = ["CREATE UNIQUE INDEX idx_or_outbound_code ON outbound_requests (outbound_code)", "CREATE INDEX idx_or_inbound ON outbound_requests (inbound_request)", "CREATE INDEX idx_or_country ON outbound_requests (country)"];
+  orr.listRule = authRule; orr.viewRule = authRule; orr.createRule = authRule; orr.updateRule = authRule; orr.deleteRule = authRule;
+  app.save(orr);
+  console.log("[Recreate] outbound_requests");
+
+  // 7. INBOUND REQUEST DETAILS
+  const ird = ensureCollection("inbound_request_details");
+  ird.fields.add(new TextField({ name: "detail_code", required: true, max: 60 }));
+  ird.fields.add(new RelationField({ name: "inbound_request", collectionId: ir.id, maxSelect: 1 }));
+  ird.fields.add(new RelationField({ name: "farmer", collectionId: farmers.id, maxSelect: 1 }));
+  ird.fields.add(new RelationField({ name: "farm", collectionId: farms.id, maxSelect: 1 }));
+  ird.fields.add(new TextField({ name: "lot_code", max: 50 }));
+  ird.fields.add(new TextField({ name: "lot_detail_code", max: 60 }));
+  ird.fields.add(new TextField({ name: "staff", max: 50 }));
+  ird.fields.add(new DateField({ name: "detail_date" }));
+  ird.fields.add(new TextField({ name: "check_result", max: 50 }));
+  ird.fields.add(new TextField({ name: "re_type", max: 100 }));
+  ird.fields.add(new TextField({ name: "re_organic", max: 10 }));
+  ird.fields.add(new TextField({ name: "re_fairtrade", max: 10 }));
+  ird.fields.add(new NumberField({ name: "re_bags", min: 0 }));
+  ird.fields.add(new NumberField({ name: "re_qty_per_bag" }));
+  ird.fields.add(new NumberField({ name: "re_total_qty" }));
+  ird.fields.add(new TextField({ name: "re_uom", max: 10 }));
+  ird.fields.add(new NumberField({ name: "re_moisture_pct" }));
+  ird.fields.add(new TextField({ name: "re_aw_level", max: 20 }));
+  ird.fields.add(new TextField({ name: "wh_type", max: 100 }));
+  ird.fields.add(new TextField({ name: "wh_organic", max: 10 }));
+  ird.fields.add(new TextField({ name: "wh_fairtrade", max: 10 }));
+  ird.fields.add(new NumberField({ name: "wh_bags", min: 0 }));
+  ird.fields.add(new NumberField({ name: "wh_qty_per_bag" }));
+  ird.fields.add(new NumberField({ name: "wh_total_qty" }));
+  ird.fields.add(new TextField({ name: "wh_uom", max: 10 }));
+  ird.fields.add(new NumberField({ name: "wh_moisture_pct" }));
+  ird.fields.add(new TextField({ name: "wh_aw_level", max: 20 }));
+  ird.fields.add(new TextField({ name: "quality_assessment", max: 100 }));
+  ird.fields.add(new TextField({ name: "status", max: 50 }));
+  ird.fields.add(new TextField({ name: "approval_status", max: 50 }));
+  ird.fields.add(new SelectField({ name: "country", values: ["indonesia", "vietnam", "laos"] }));
+  ird.fields.add(new TextField({ name: "season", max: 20 }));
+  ird.fields.add(new AutodateField({ name: "created", onCreate: true, onUpdate: false }));
+  ird.fields.add(new AutodateField({ name: "updated", onCreate: true, onUpdate: true }));
+  ird.indexes = ["CREATE UNIQUE INDEX idx_ird_detail_code ON inbound_request_details (detail_code)", "CREATE INDEX idx_ird_inbound ON inbound_request_details (inbound_request)"];
+  ird.listRule = authRule; ird.viewRule = authRule; ird.createRule = authRule; ird.updateRule = authRule; ird.deleteRule = authRule;
+  app.save(ird);
+  console.log("[Recreate] inbound_request_details");
+
+  // 8. INBOUND CHECK DETAILS
+  const icd = ensureCollection("inbound_check_details");
+  icd.fields.add(new TextField({ name: "check_code", required: true, max: 80 }));
+  icd.fields.add(new RelationField({ name: "inbound_request", collectionId: ir.id, maxSelect: 1 }));
+  icd.fields.add(new RelationField({ name: "inbound_detail", collectionId: ird.id, maxSelect: 1 }));
+  icd.fields.add(new RelationField({ name: "farm", collectionId: farms.id, maxSelect: 1 }));
+  icd.fields.add(new TextField({ name: "lot_detail_code", max: 60 }));
+  icd.fields.add(new TextField({ name: "staff", max: 50 }));
+  icd.fields.add(new DateField({ name: "check_date" }));
+  icd.fields.add(new NumberField({ name: "moisture_pct" }));
+  icd.fields.add(new NumberField({ name: "total_bag_weight_kg" }));
+  icd.fields.add(new NumberField({ name: "number_of_bags", min: 0 }));
+  icd.fields.add(new NumberField({ name: "weight_per_bag_kg" }));
+  icd.fields.add(new TextField({ name: "remark" }));
+  icd.fields.add(new SelectField({ name: "country", values: ["indonesia", "vietnam", "laos"] }));
+  icd.fields.add(new TextField({ name: "season", max: 20 }));
+  icd.fields.add(new AutodateField({ name: "created", onCreate: true, onUpdate: false }));
+  icd.fields.add(new AutodateField({ name: "updated", onCreate: true, onUpdate: true }));
+  icd.indexes = ["CREATE UNIQUE INDEX idx_icd_check_code ON inbound_check_details (check_code)", "CREATE INDEX idx_icd_inbound ON inbound_check_details (inbound_request)", "CREATE INDEX idx_icd_detail ON inbound_check_details (inbound_detail)"];
+  icd.listRule = authRule; icd.viewRule = authRule; icd.createRule = authRule; icd.updateRule = authRule; icd.deleteRule = authRule;
+  app.save(icd);
+  console.log("[Recreate] inbound_check_details");
+
+  console.log("[Recreate] All 8 collections recreated!");
+});
